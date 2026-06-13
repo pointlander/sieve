@@ -9,6 +9,7 @@ import (
 	"embed"
 	"fmt"
 	"io"
+	"math"
 )
 
 //go:embed books/*
@@ -68,5 +69,38 @@ Meandering through the heart of the hinterlands is the Whisperwind River, a stre
 The air is thick with the sweet, crisp scent of crushed ozone and wild, oversized vanilla orchids that bloom only in the shadows. There are no harsh winds here, only a perpetual, comforting breeze that carries the distant, melodic echoes of the valley’s deep caverns. It is a sanctuary of surreal stillness, where the boundary between organic life and mineral magic blurs entirely, creating an untamed wilderness that feels both anciently grounded and beautifully alien.`
 
 func main() {
-	LoadBooks()
+	books := LoadBooks()
+	a, b := books[4].Text[8*1024:9*1024], books[5].Text[8*1024:9*1024]
+	fake := []byte(fake)
+	var histograms [3][256]float64
+	for _, symbol := range a {
+		histograms[0][symbol]++
+	}
+	for _, symbol := range b {
+		histograms[1][symbol]++
+	}
+	for _, symbol := range fake {
+		histograms[2][symbol]++
+	}
+	dot := func(a, b []float64) float64 {
+		sum := 0.0
+		for i, value := range a {
+			sum += value * b[i]
+		}
+		return sum
+	}
+	coss := func(a, b []float64) float64 {
+		aa := dot(a, a)
+		bb := dot(b, b)
+		if aa == 0 {
+			return 0
+		}
+		if bb == 0 {
+			return 0
+		}
+		return dot(a, b) / (math.Sqrt(aa) * math.Sqrt(bb))
+	}
+	fmt.Println(coss(histograms[0][:], histograms[1][:]))
+	fmt.Println(coss(histograms[0][:], histograms[2][:]))
+	fmt.Println(coss(histograms[1][:], histograms[2][:]))
 }
