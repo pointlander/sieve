@@ -79,7 +79,8 @@ type Target struct {
 func main() {
 	books := LoadBooks()
 	a, b := books[4].Text[9*1024:10*1024], books[5].Text[8*1024:9*1024]
-	fake := []byte(fake)
+	fake := []byte(fake[:1024])
+	fmt.Println(len(a), len(b), len(fake))
 	data := [][]byte{
 		a,
 		b,
