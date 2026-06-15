@@ -72,15 +72,16 @@ func main() {
 	books := LoadBooks()
 	a, b := books[4].Text[8*1024:9*1024], books[5].Text[8*1024:9*1024]
 	fake := []byte(fake)
+	data := [][]byte{
+		a,
+		b,
+		fake,
+	}
 	var histograms [3][256]float64
-	for _, symbol := range a {
-		histograms[0][symbol]++
-	}
-	for _, symbol := range b {
-		histograms[1][symbol]++
-	}
-	for _, symbol := range fake {
-		histograms[2][symbol]++
+	for i, d := range data {
+		for _, symbol := range d {
+			histograms[i][symbol]++
+		}
 	}
 	dot := func(a, b []float64) float64 {
 		sum := 0.0
