@@ -126,6 +126,7 @@ func main() {
 			}
 			symbols[0], symbols[1] = symbols[1], symbol
 			targets[i].Count[symbols]++
+			targets[i].Total++
 		}
 	}
 	prob := func(a, b int) float64 {
