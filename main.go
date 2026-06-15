@@ -68,6 +68,14 @@ Meandering through the heart of the hinterlands is the Whisperwind River, a stre
 
 The air is thick with the sweet, crisp scent of crushed ozone and wild, oversized vanilla orchids that bloom only in the shadows. There are no harsh winds here, only a perpetual, comforting breeze that carries the distant, melodic echoes of the valley’s deep caverns. It is a sanctuary of surreal stillness, where the boundary between organic life and mineral magic blurs entirely, creating an untamed wilderness that feels both anciently grounded and beautifully alien.`
 
+// Symbols are some symbols
+type Symbols [2]byte
+
+type Target struct {
+	Count map[Symbols]uint64
+	Total uint64
+}
+
 func main() {
 	books := LoadBooks()
 	a, b := books[4].Text[8*1024:9*1024], books[5].Text[8*1024:9*1024]
@@ -104,4 +112,33 @@ func main() {
 	fmt.Println(coss(histograms[0][:], histograms[1][:]))
 	fmt.Println(coss(histograms[0][:], histograms[2][:]))
 	fmt.Println(coss(histograms[1][:], histograms[2][:]))
+
+	targets := make([]Target, len(data))
+	for i := range targets {
+		targets[i].Count = make(map[Symbols]uint64)
+	}
+	for i, d := range data {
+		var symbols Symbols
+		for _, symbol := range d {
+			symbols[0], symbols[1] = symbols[1], symbol
+			targets[i].Count[symbols]++
+		}
+	}
+	prob := func(a, b int) float64 {
+		var symbols Symbols
+		sum := 0.0
+		for i := range targets {
+			sum += float64(targets[i].Total)
+		}
+		p := math.Log(float64(targets[a].Total+1) / (sum + float64(len(targets))))
+		for _, symbol := range data[b] {
+			symbols[0], symbols[1] = symbols[1], symbol
+			p += math.Log(float64(targets[a].Count[symbols]+1) / (float64(targets[a].Total) + float64(len(targets[a].Count))))
+		}
+		return p
+	}
+	fmt.Println()
+	fmt.Println(prob(0, 1))
+	fmt.Println(prob(0, 2))
+	fmt.Println(prob(1, 2))
 }
