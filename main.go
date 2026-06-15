@@ -120,6 +120,9 @@ func main() {
 	for i, d := range data {
 		var symbols Symbols
 		for _, symbol := range d {
+			if symbol == '\r' || symbol == '\n' {
+				continue
+			}
 			symbols[0], symbols[1] = symbols[1], symbol
 			targets[i].Count[symbols]++
 		}
@@ -132,6 +135,9 @@ func main() {
 		}
 		p := math.Log(float64(targets[a].Total+1) / (sum + float64(len(targets))))
 		for _, symbol := range data[b] {
+			if symbol == '\r' || symbol == '\n' {
+				continue
+			}
 			symbols[0], symbols[1] = symbols[1], symbol
 			p += math.Log(float64(targets[a].Count[symbols]+1) / (float64(targets[a].Total) + float64(len(targets[a].Count))))
 		}
