@@ -135,12 +135,17 @@ func main() {
 			sum += float64(targets[i].Total)
 		}
 		p := math.Log(float64(targets[a].Total+1) / (sum + float64(len(targets))))
+		set := make(map[Symbols]bool)
 		for _, symbol := range data[b] {
 			if symbol == '\r' || symbol == '\n' {
 				continue
 			}
 			symbols[0], symbols[1] = symbols[1], symbol
+			set[symbols] = true
+		}
+		for symbols := range set {
 			p += math.Log(float64(targets[a].Count[symbols]+1) / (float64(targets[a].Total) + float64(len(targets[a].Count))))
+
 		}
 		return p
 	}
