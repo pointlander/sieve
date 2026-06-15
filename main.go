@@ -5,6 +5,8 @@
 package main
 
 import (
+	"archive/zip"
+	"bytes"
 	"compress/bzip2"
 	"embed"
 	"fmt"
@@ -14,6 +16,9 @@ import (
 
 //go:embed books/*
 var Books embed.FS
+
+//go:embed archive.zip
+var Archive embed.FS
 
 // Book is a book
 type Book struct {
@@ -114,11 +119,43 @@ func main() {
 	fmt.Println(coss(histograms[0][:], histograms[2][:]))
 	fmt.Println(coss(histograms[1][:], histograms[2][:]))
 
-	targets := make([]Target, len(data))
+	var classes [2][]byte
+	{
+		file, err := Archive.Open("archive.zip")
+		if err != nil {
+			panic(err)
+		}
+		defer file.Close()
+
+		data, err := io.ReadAll(file)
+		if err != nil {
+			panic(err)
+		}
+
+		reader, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
+		if err != nil {
+			panic(err)
+		}
+		for _, f := range reader.File {
+			if f.Name == "persuade15_claude_instant1.csv" {
+				dat, err := f.Open()
+				if err != nil {
+					panic(err)
+				}
+				classes[0], err = io.ReadAll(dat)
+				if err != nil {
+					panic(err)
+				}
+			}
+		}
+	}
+	classes[1] = books[7].Text
+
+	targets := make([]Target, len(classes))
 	for i := range targets {
 		targets[i].Count = make(map[Symbols]uint64)
 	}
-	for i, d := range data {
+	for i, d := range classes {
 		var symbols Symbols
 		for _, symbol := range d {
 			if symbol == '\r' || symbol == '\n' {
@@ -151,7 +188,15 @@ func main() {
 		return p
 	}
 	fmt.Println()
-	fmt.Println(prob(0, 1))
-	fmt.Println(prob(0, 2))
-	fmt.Println(prob(1, 2))
+	test := func(i int) {
+		a, b := prob(0, i), prob(1, i)
+		if a < b {
+			fmt.Println(a, b, "real")
+		} else {
+			fmt.Println(a, b, "fake")
+		}
+	}
+	test(0)
+	test(1)
+	test(2)
 }
