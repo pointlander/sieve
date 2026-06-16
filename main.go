@@ -86,7 +86,7 @@ type Prompt struct {
 // Query submits a query to the llm
 func Query(query string) string {
 	prompt := Prompt{
-		Model:  "gemma",
+		Model:  "gemma4",
 		Prompt: query,
 	}
 	data, err := json.Marshal(prompt)
