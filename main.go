@@ -6,12 +6,16 @@ package main
 
 import (
 	"archive/zip"
+	"bufio"
 	"bytes"
 	"compress/bzip2"
 	"embed"
+	"encoding/json"
+	"flag"
 	"fmt"
 	"io"
 	"math"
+	"net/http"
 )
 
 //go:embed books/*
@@ -73,6 +77,41 @@ Meandering through the heart of the hinterlands is the Whisperwind River, a stre
 
 The air is thick with the sweet, crisp scent of crushed ozone and wild, oversized vanilla orchids that bloom only in the shadows. There are no harsh winds here, only a perpetual, comforting breeze that carries the distant, melodic echoes of the valley’s deep caverns. It is a sanctuary of surreal stillness, where the boundary between organic life and mineral magic blurs entirely, creating an untamed wilderness that feels both anciently grounded and beautifully alien.`
 
+// Prompt is a llm prompt
+type Prompt struct {
+	Model  string `json:"model"`
+	Prompt string `json:"prompt"`
+}
+
+// Query submits a query to the llm
+func Query(query string) string {
+	prompt := Prompt{
+		Model:  "gemma",
+		Prompt: query,
+	}
+	data, err := json.Marshal(prompt)
+	if err != nil {
+		panic(err)
+	}
+	buffer := bytes.NewBuffer(data)
+	response, err := http.Post("http://localhost:11434/api/generate", "application/json", buffer)
+	if err != nil {
+		panic(err)
+	}
+	reader, answer := bufio.NewReader(response.Body), ""
+	for {
+		line, err := reader.ReadString('\n')
+		if err != nil {
+			break
+		}
+		data := map[string]interface{}{}
+		err = json.Unmarshal([]byte(line), &data)
+		text := data["response"].(string)
+		answer += text
+	}
+	return answer
+}
+
 // Symbols are some symbols
 type Symbols [2]byte
 
@@ -81,7 +120,19 @@ type Target struct {
 	Total uint64
 }
 
+var (
+	// FlagQuery submit a query to the llm
+	FlagQuery = flag.String("query", "", "query the llm")
+)
+
 func main() {
+	flag.Parse()
+
+	if *FlagQuery != "" {
+		fmt.Println(Query(*FlagQuery))
+		return
+	}
+
 	books := LoadBooks()
 	a, b := books[4].Text[9*1024:10*1024], books[5].Text[8*1024:9*1024]
 	fake := []byte(fake[:1024])
