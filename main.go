@@ -53,6 +53,7 @@ func LoadBooks() []Book {
 		{Name: "37106.txt.utf-8.bz2"},
 		{Name: "64317.txt.utf-8.bz2"},
 		{Name: "67979.txt.utf-8.bz2"},
+		{Name: "gemma4.txt.bz2"},
 	}
 	load := func(book string) []byte {
 		file, err := Books.Open(book)
@@ -187,7 +188,7 @@ func main() {
 	fmt.Println(coss(histograms[0][:], histograms[2][:]))
 	fmt.Println(coss(histograms[1][:], histograms[2][:]))
 
-	var classes [2][]byte
+	var classes [3][]byte
 	{
 		file, err := Archive.Open("archive.zip")
 		if err != nil {
@@ -218,6 +219,7 @@ func main() {
 		}
 	}
 	classes[1] = books[7].Text
+	classes[2] = books[18].Text
 
 	targets := make([]Target, len(classes))
 	for i := range targets {
@@ -257,11 +259,11 @@ func main() {
 	}
 	fmt.Println()
 	test := func(i int) {
-		a, b := prob(0, i), prob(1, i)
+		a, b, c := prob(0, i), prob(1, i), prob(2, i)
 		if a < b {
-			fmt.Println(a, b, "real")
+			fmt.Println(a, c, b, "real")
 		} else {
-			fmt.Println(a, b, "fake")
+			fmt.Println(a, c, b, "fake")
 		}
 	}
 	test(0)
