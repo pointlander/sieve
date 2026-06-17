@@ -30,30 +30,88 @@ var Archive embed.FS
 type Book struct {
 	Name string
 	Text []byte
+	Real bool
 }
 
 // LoadBooks loads books
 func LoadBooks() []Book {
 	books := []Book{
-		{Name: "10.txt.utf-8.bz2"},
-		{Name: "11.txt.utf-8.bz2"},
-		{Name: "43.txt.utf-8.bz2"},
-		{Name: "pg74.txt.bz2"},
-		{Name: "76.txt.utf-8.bz2"},
-		{Name: "84.txt.utf-8.bz2"},
-		{Name: "100.txt.utf-8.bz2"},
-		{Name: "145.txt.utf-8.bz2"},
-		{Name: "768.txt.utf-8.bz2"},
-		{Name: "1260.txt.utf-8.bz2"},
-		{Name: "1342.txt.utf-8.bz2"},
-		{Name: "1837.txt.utf-8.bz2"},
-		{Name: "2641.txt.utf-8.bz2"},
-		{Name: "2701.txt.utf-8.bz2"},
-		{Name: "3176.txt.utf-8.bz2"},
-		{Name: "37106.txt.utf-8.bz2"},
-		{Name: "64317.txt.utf-8.bz2"},
-		{Name: "67979.txt.utf-8.bz2"},
-		{Name: "gemma4.txt.bz2"},
+		{
+			Real: true,
+			Name: "10.txt.utf-8.bz2",
+		},
+		{
+			Real: true,
+			Name: "11.txt.utf-8.bz2",
+		},
+		{
+			Real: true,
+			Name: "43.txt.utf-8.bz2",
+		},
+		{
+			Real: true,
+			Name: "pg74.txt.bz2",
+		},
+		{
+			Real: true,
+			Name: "76.txt.utf-8.bz2",
+		},
+		{
+			Real: true,
+			Name: "84.txt.utf-8.bz2",
+		},
+		{
+			Real: true,
+			Name: "100.txt.utf-8.bz2",
+		},
+		{
+			Real: true,
+			Name: "145.txt.utf-8.bz2",
+		},
+		{
+			Real: true,
+			Name: "768.txt.utf-8.bz2",
+		},
+		{
+			Real: true,
+			Name: "1260.txt.utf-8.bz2",
+		},
+		{
+			Real: true,
+			Name: "1342.txt.utf-8.bz2",
+		},
+		{
+			Real: true,
+			Name: "1837.txt.utf-8.bz2",
+		},
+		{
+			Real: true,
+			Name: "2641.txt.utf-8.bz2",
+		},
+		{
+			Real: true,
+			Name: "2701.txt.utf-8.bz2",
+		},
+		{
+			Real: true,
+			Name: "3176.txt.utf-8.bz2",
+		},
+		{
+			Real: true,
+			Name: "37106.txt.utf-8.bz2",
+		},
+		{
+			Real: true,
+			Name: "64317.txt.utf-8.bz2",
+		},
+		{
+			Real: true,
+			Name: "67979.txt.utf-8.bz2",
+		},
+		{
+			Real: false,
+			Name: "gemma4.txt.bz2",
+		},
 	}
 	load := func(book string) []byte {
 		file, err := Books.Open(book)
@@ -218,8 +276,7 @@ func main() {
 			}
 		}
 	}
-	classes[1] = books[7].Text
-	classes[2] = books[18].Text
+	classes[1] = books[18].Text
 
 	targets := make([]Target, len(classes))
 	for i := range targets {
@@ -236,7 +293,31 @@ func main() {
 			targets[i].Total++
 		}
 	}
-	prob := func(a, b int) float64 {
+	count := 0
+	for i := range books {
+		if books[i].Real {
+			count++
+		}
+	}
+	reals := make([]Target, count)
+	for i := range reals {
+		reals[i].Count = make(map[Symbols]uint64)
+	}
+	for i, d := range books {
+		if !d.Real {
+			continue
+		}
+		var symbols Symbols
+		for _, symbol := range d.Text {
+			if symbol == '\r' || symbol == '\n' {
+				continue
+			}
+			symbols[0], symbols[1] = symbols[1], symbol
+			reals[i].Count[symbols]++
+			reals[i].Total++
+		}
+	}
+	prob := func(targets []Target, a, b int) float64 {
 		var symbols Symbols
 		sum := 0.0
 		for i := range targets {
@@ -259,11 +340,21 @@ func main() {
 	}
 	fmt.Println()
 	test := func(i int) {
-		a, b, c := prob(0, i), prob(1, i), prob(2, i)
-		if a < b {
-			fmt.Println(a, c, b, "real")
+		a, b := prob(targets, 0, i), prob(targets, 1, i)
+		c := [2]int{}
+		for r := range reals {
+			score := prob(reals, r, i)
+			if a < score {
+				c[0]++
+			}
+			if b < score {
+				c[1]++
+			}
+		}
+		if c[0] > count/2 && c[1] > count/2 {
+			fmt.Println(a, b, c, "real")
 		} else {
-			fmt.Println(a, c, b, "fake")
+			fmt.Println(a, b, c, "fake")
 		}
 	}
 	test(0)
