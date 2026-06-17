@@ -15,7 +15,9 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"math/rand"
 	"net/http"
+	"strings"
 )
 
 //go:embed books/*
@@ -123,6 +125,8 @@ type Target struct {
 var (
 	// FlagQuery submit a query to the llm
 	FlagQuery = flag.String("query", "", "query the llm")
+	// FlagGenerate generates content
+	FlagGenerate = flag.Bool("generate", false, "generate content")
 )
 
 func main() {
@@ -131,6 +135,19 @@ func main() {
 	if *FlagQuery != "" {
 		fmt.Println(Query(*FlagQuery))
 		return
+	}
+
+	if *FlagGenerate {
+		rng := rand.New(rand.NewSource(1))
+		results := Query("What is the meaning of life? Be verbose in your answer.")
+		fmt.Println(results)
+		for {
+			words := strings.Fields(results)
+			next := words[rng.Intn(len(words))]
+			next = strings.ToLower(strings.Trim(next, ".!?,"))
+			results = Query(fmt.Sprintf("What is the meaning of %s? Be verbose in your answer.", next))
+			fmt.Println(results)
+		}
 	}
 
 	books := LoadBooks()
