@@ -147,7 +147,7 @@ type Prompt struct {
 // Query submits a query to the llm
 func Query(query string) string {
 	prompt := Prompt{
-		Model:  "gemma4",
+		Model:  *FlagModel,
 		Prompt: query,
 	}
 	data, err := json.Marshal(prompt)
@@ -184,6 +184,8 @@ type Target struct {
 var (
 	// FlagQuery submit a query to the llm
 	FlagQuery = flag.String("query", "", "query the llm")
+	// FlagModel the model to use
+	FlagModel = flag.String("model", "gemma4", "the model to use")
 	// FlagGenerate generates content
 	FlagGenerate = flag.Bool("generate", false, "generate content")
 )
