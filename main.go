@@ -116,6 +116,10 @@ func LoadBooks() []Book {
 			Real: false,
 			Name: "gpt-oss.txt.bz2",
 		},
+		{
+			Real: false,
+			Name: "llama3.1.txt.bz2",
+		},
 	}
 	load := func(book string) []byte {
 		file, err := Books.Open(book)
@@ -252,7 +256,7 @@ func main() {
 	fmt.Println(coss(histograms[0][:], histograms[2][:]))
 	fmt.Println(coss(histograms[1][:], histograms[2][:]))
 
-	var classes [3][]byte
+	var classes [4][]byte
 	{
 		file, err := Archive.Open("archive.zip")
 		if err != nil {
@@ -284,6 +288,7 @@ func main() {
 	}
 	classes[1] = books[18].Text
 	classes[2] = books[19].Text
+	classes[3] = books[20].Text
 
 	targets := make([]Target, len(classes))
 	for i := range targets {
@@ -347,8 +352,8 @@ func main() {
 	}
 	fmt.Println()
 	test := func(i int) {
-		a, b, d := prob(targets, 0, i), prob(targets, 1, i), prob(targets, 2, i)
-		c := [3]int{}
+		a, b, d, e := prob(targets, 0, i), prob(targets, 1, i), prob(targets, 2, i), prob(targets, 3, i)
+		c := [4]int{}
 		for r := range reals {
 			score := prob(reals, r, i)
 			if a < score {
@@ -360,6 +365,9 @@ func main() {
 			if d < score {
 				c[2]++
 			}
+			if e < score {
+				c[3]++
+			}
 		}
 		score := 0
 		for i := range c {
@@ -367,7 +375,7 @@ func main() {
 				score++
 			}
 		}
-		if score >= 2 {
+		if score > 2 {
 			fmt.Println(a, b, d, c, "real")
 		} else {
 			fmt.Println(a, b, d, c, "fake")
