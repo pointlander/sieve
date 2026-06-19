@@ -368,9 +368,9 @@ func main() {
 			}
 		}
 		if score >= 2 {
-			fmt.Println(a, b, c, "real")
+			fmt.Println(a, b, d, c, "real")
 		} else {
-			fmt.Println(a, b, c, "fake")
+			fmt.Println(a, b, d, c, "fake")
 		}
 	}
 	test(0)
