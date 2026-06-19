@@ -112,6 +112,10 @@ func LoadBooks() []Book {
 			Real: false,
 			Name: "gemma4.txt.bz2",
 		},
+		{
+			Real: false,
+			Name: "gpt-oss.txt.bz2",
+		},
 	}
 	load := func(book string) []byte {
 		file, err := Books.Open(book)
@@ -279,6 +283,7 @@ func main() {
 		}
 	}
 	classes[1] = books[18].Text
+	classes[2] = books[19].Text
 
 	targets := make([]Target, len(classes))
 	for i := range targets {
@@ -342,8 +347,8 @@ func main() {
 	}
 	fmt.Println()
 	test := func(i int) {
-		a, b := prob(targets, 0, i), prob(targets, 1, i)
-		c := [2]int{}
+		a, b, d := prob(targets, 0, i), prob(targets, 1, i), prob(targets, 2, i)
+		c := [3]int{}
 		for r := range reals {
 			score := prob(reals, r, i)
 			if a < score {
@@ -352,8 +357,17 @@ func main() {
 			if b < score {
 				c[1]++
 			}
+			if d < score {
+				c[2]++
+			}
 		}
-		if c[0] > count/2 && c[1] > count/2 {
+		score := 0
+		for i := range c {
+			if c[i] > count/2 {
+				score++
+			}
+		}
+		if score >= 2 {
 			fmt.Println(a, b, c, "real")
 		} else {
 			fmt.Println(a, b, c, "fake")
