@@ -16,6 +16,7 @@ import (
 	"math"
 	"math/rand"
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -171,9 +172,9 @@ type Prompt struct {
 }
 
 // Query submits a query to the llm
-func Query(query string) string {
+func Query(query, model string) string {
 	prompt := Prompt{
-		Model:  *FlagModel,
+		Model:  model,
 		Prompt: query,
 	}
 	data, err := json.Marshal(prompt)
@@ -251,6 +252,8 @@ var (
 	FlagModel = flag.String("model", "gemma4", "the model to use")
 	// FlagGenerate generates content
 	FlagGenerate = flag.Bool("generate", false, "generate content")
+	// FlagSample generates some samples
+	FlagSample = flag.Bool("sample", false, "generate samples")
 )
 
 // NNMode is the nearest neighbor mode
@@ -302,21 +305,45 @@ func main() {
 	}
 
 	if *FlagQuery != "" {
-		fmt.Println(Query(*FlagQuery))
+		fmt.Println(Query(*FlagQuery, *FlagModel))
 		return
 	}
 
 	if *FlagGenerate {
 		rng := rand.New(rand.NewSource(1))
-		results := Query("What is the meaning of life? Be verbose in your answer.")
+		results := Query("What is the meaning of life? Be verbose in your answer.", *FlagModel)
 		fmt.Println(results)
 		for {
 			words := strings.Fields(results)
 			next := words[rng.Intn(len(words))]
 			next = strings.ToLower(strings.Trim(next, ".!?,"))
-			results = Query(fmt.Sprintf("What is the meaning of %s? Be verbose in your answer.", next))
+			results = Query(fmt.Sprintf("What is the meaning of %s? Be verbose in your answer.", next), *FlagModel)
 			fmt.Println(results)
 		}
+	}
+
+	if *FlagSample {
+		output, err := os.Create("samples.go")
+		if err != nil {
+			panic(err)
+		}
+		defer output.Close()
+		fmt.Fprintf(output, `// Copyright 2026 The Sieve Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+		
+package main
+
+var samples = []string{
+`)
+
+		models := []string{"lemma4", "gpt-oss", "llama3.1"}
+		for _, model := range models {
+			results := Query("Describe a fictional scene in at least 1024 symbols.", model)
+			fmt.Fprintf(output, "`%s`,\n", results)
+		}
+		fmt.Fprintf(output, "}")
+		return
 	}
 
 	books := LoadBooks()
