@@ -350,9 +350,9 @@ var samples = []string{
 	data := [][]byte{
 		books[4].Text[9*1024 : 10*1024],
 		books[5].Text[8*1024 : 9*1024],
-		[]byte(gemini[:1024]),
-		books[19].Text[8*1024 : 9*1024],
-		books[20].Text[8*1024 : 9*1024],
+		[]byte(samples[0])[:1024],
+		[]byte(samples[1])[:1024],
+		[]byte(samples[2])[:1024],
 	}
 	var classes [][]byte
 	{
