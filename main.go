@@ -24,97 +24,119 @@ var Books embed.FS
 
 // Book is a book
 type Book struct {
-	Name string
-	Text []byte
-	Real bool
+	Name  string
+	Text  []byte
+	Real  bool
+	Index int
 }
 
 // LoadBooks loads books
 func LoadBooks() []Book {
 	books := []Book{
 		{
-			Real: true,
-			Name: "10.txt.utf-8.bz2",
+			Real:  true,
+			Name:  "10.txt.utf-8.bz2",
+			Index: 0,
 		},
 		{
-			Real: true,
-			Name: "11.txt.utf-8.bz2",
+			Real:  true,
+			Name:  "11.txt.utf-8.bz2",
+			Index: 1,
 		},
 		{
-			Real: true,
-			Name: "43.txt.utf-8.bz2",
+			Real:  true,
+			Name:  "43.txt.utf-8.bz2",
+			Index: 2,
 		},
 		{
-			Real: true,
-			Name: "pg74.txt.bz2",
+			Real:  true,
+			Name:  "pg74.txt.bz2",
+			Index: 3,
 		},
 		{
-			Real: true,
-			Name: "76.txt.utf-8.bz2",
+			Real:  true,
+			Name:  "76.txt.utf-8.bz2",
+			Index: 4,
 		},
 		{
-			Real: true,
-			Name: "84.txt.utf-8.bz2",
+			Real:  true,
+			Name:  "84.txt.utf-8.bz2",
+			Index: 5,
 		},
 		{
-			Real: true,
-			Name: "100.txt.utf-8.bz2",
+			Real:  true,
+			Name:  "100.txt.utf-8.bz2",
+			Index: 6,
 		},
 		{
-			Real: true,
-			Name: "145.txt.utf-8.bz2",
+			Real:  true,
+			Name:  "145.txt.utf-8.bz2",
+			Index: 7,
 		},
 		{
-			Real: true,
-			Name: "768.txt.utf-8.bz2",
+			Real:  true,
+			Name:  "768.txt.utf-8.bz2",
+			Index: 8,
 		},
 		{
-			Real: true,
-			Name: "1260.txt.utf-8.bz2",
+			Real:  true,
+			Name:  "1260.txt.utf-8.bz2",
+			Index: 9,
 		},
 		{
-			Real: true,
-			Name: "1342.txt.utf-8.bz2",
+			Real:  true,
+			Name:  "1342.txt.utf-8.bz2",
+			Index: 10,
 		},
 		{
-			Real: true,
-			Name: "1837.txt.utf-8.bz2",
+			Real:  true,
+			Name:  "1837.txt.utf-8.bz2",
+			Index: 11,
 		},
 		{
-			Real: true,
-			Name: "2641.txt.utf-8.bz2",
+			Real:  true,
+			Name:  "2641.txt.utf-8.bz2",
+			Index: 12,
 		},
 		{
-			Real: true,
-			Name: "2701.txt.utf-8.bz2",
+			Real:  true,
+			Name:  "2701.txt.utf-8.bz2",
+			Index: 13,
 		},
 		{
-			Real: true,
-			Name: "3176.txt.utf-8.bz2",
+			Real:  true,
+			Name:  "3176.txt.utf-8.bz2",
+			Index: 14,
 		},
 		{
-			Real: true,
-			Name: "37106.txt.utf-8.bz2",
+			Real:  true,
+			Name:  "37106.txt.utf-8.bz2",
+			Index: 15,
 		},
 		{
-			Real: true,
-			Name: "64317.txt.utf-8.bz2",
+			Real:  true,
+			Name:  "64317.txt.utf-8.bz2",
+			Index: 16,
 		},
 		{
-			Real: true,
-			Name: "67979.txt.utf-8.bz2",
+			Real:  true,
+			Name:  "67979.txt.utf-8.bz2",
+			Index: 17,
 		},
 		{
-			Real: false,
-			Name: "gemma4.txt.bz2",
+			Real:  false,
+			Name:  "gemma4.txt.bz2",
+			Index: 18,
 		},
 		{
-			Real: false,
-			Name: "gpt-oss.txt.bz2",
+			Real:  false,
+			Name:  "gpt-oss.txt.bz2",
+			Index: 19,
 		},
 		{
-			Real: false,
-			Name: "llama3.1.txt.bz2",
+			Real:  false,
+			Name:  "llama3.1.txt.bz2",
+			Index: 20,
 		},
 	}
 	load := func(book string) []byte {
@@ -136,7 +158,7 @@ func LoadBooks() []Book {
 	return books
 }
 
-const fake = `A shimmering twilight permanently blankets the Cerulean Hinterlands, a vast, primordial basin where nature defies conventional biology. The ground beneath is a spongy, resilient carpet of bioluminescent moss that pulses in tandem with a slow, rhythmic planetary heartbeat. Towering above this neon floor are the Goliath Redwoods, colossal flora whose bark resembles liquid obsidian, reflecting the twin moons that hang suspended in a violet sky. Instead of leaves, these silent giants sprout iridescent, translucent crystalline fronds that chime like distant glass wind chimes whenever the atmospheric thermal currents sweep through the valley.
+const gemini = `A shimmering twilight permanently blankets the Cerulean Hinterlands, a vast, primordial basin where nature defies conventional biology. The ground beneath is a spongy, resilient carpet of bioluminescent moss that pulses in tandem with a slow, rhythmic planetary heartbeat. Towering above this neon floor are the Goliath Redwoods, colossal flora whose bark resembles liquid obsidian, reflecting the twin moons that hang suspended in a violet sky. Instead of leaves, these silent giants sprout iridescent, translucent crystalline fronds that chime like distant glass wind chimes whenever the atmospheric thermal currents sweep through the valley.
 
 Meandering through the heart of the hinterlands is the Whisperwind River, a stream of liquid quicksilver that flows uphill, defying gravity by climbing the tiered obsidian terraces. The water glows with a soft, internal amber warmth, casting dancing shadows on the surrounding stone formations. Flocks of featherless, moth-winged avians dance above the water's surface, leaving trails of stardust in their wake.
 
@@ -235,7 +257,7 @@ var (
 func NNMode() {
 	books := LoadBooks()
 	a, b := books[4].Text[9*1024:10*1024], books[5].Text[8*1024:9*1024]
-	fake := []byte(fake[:1024])
+	fake := []byte(gemini[:1024])
 	fmt.Println(len(a), len(b), len(fake))
 	data := [][]byte{
 		a,
@@ -301,7 +323,9 @@ func main() {
 	data := [][]byte{
 		books[4].Text[9*1024 : 10*1024],
 		books[5].Text[8*1024 : 9*1024],
-		[]byte(fake[:1024]),
+		[]byte(gemini[:1024]),
+		books[19].Text[8*1024 : 9*1024],
+		books[20].Text[8*1024 : 9*1024],
 	}
 	var classes [][]byte
 	{
