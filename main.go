@@ -337,7 +337,7 @@ package main
 var samples = []string{
 `)
 
-		models := []string{"lemma4", "gpt-oss", "llama3.1"}
+		models := []string{"gemma4", "gpt-oss", "llama3.1:8b"}
 		for _, model := range models {
 			results := Query("Describe a fictional scene in at least 1024 symbols.", model)
 			fmt.Fprintf(output, "`%s`,\n", results)
