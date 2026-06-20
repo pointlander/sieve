@@ -22,9 +22,6 @@ import (
 //go:embed books/*
 var Books embed.FS
 
-//go:embed archive.zip
-var Archive embed.FS
-
 // Book is a book
 type Book struct {
 	Name string
@@ -333,7 +330,7 @@ func main() {
 			if symbol == '\r' || symbol == '\n' {
 				continue
 			}
-			symbols[0], symbols[1] = symbols[1], symbol
+			symbols.Iterate(symbol)
 			targets[i].Count[symbols]++
 			targets[i].Total++
 		}
