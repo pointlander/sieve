@@ -5,7 +5,6 @@
 package main
 
 import (
-	"archive/zip"
 	"bufio"
 	"bytes"
 	"compress/bzip2"
@@ -184,12 +183,49 @@ func Query(query string) string {
 // Symbols are some symbols
 type Symbols [2]byte
 
+// Iterate iterate the symbols
+func (s *Symbols) Iterate(n byte) {
+	for i := range s[:len(s)-1] {
+		s[i] = s[i+1]
+	}
+	s[len(s)-1] = n
+}
+
+// Target is a model to target
 type Target struct {
 	Count map[Symbols]uint64
 	Total uint64
 }
 
+// Targets is a set of targets
+type Targets []Target
+
+// Score is the score function
+func (t Targets) Score(a int, data []byte) float64 {
+	var symbols Symbols
+	sum := 0.0
+	for i := range t {
+		sum += float64(t[i].Total)
+	}
+	p := math.Log(float64(t[a].Total+1) / (sum + float64(len(t))))
+	set := make(map[Symbols]bool)
+	for _, symbol := range data {
+		if symbol == '\r' || symbol == '\n' {
+			continue
+		}
+		symbols.Iterate(symbol)
+		set[symbols] = true
+	}
+	for symbols := range set {
+		p += math.Log(float64(t[a].Count[symbols]+1) / (float64(t[a].Total) + float64(len(t[a].Count))))
+
+	}
+	return p
+}
+
 var (
+	// FlagNN nearest neighbor mode
+	FlagNN = flag.Bool("nn", false, "nearest neighbor mode")
 	// FlagQuery submit a query to the llm
 	FlagQuery = flag.String("query", "", "query the llm")
 	// FlagModel the model to use
@@ -198,27 +234,8 @@ var (
 	FlagGenerate = flag.Bool("generate", false, "generate content")
 )
 
-func main() {
-	flag.Parse()
-
-	if *FlagQuery != "" {
-		fmt.Println(Query(*FlagQuery))
-		return
-	}
-
-	if *FlagGenerate {
-		rng := rand.New(rand.NewSource(1))
-		results := Query("What is the meaning of life? Be verbose in your answer.")
-		fmt.Println(results)
-		for {
-			words := strings.Fields(results)
-			next := words[rng.Intn(len(words))]
-			next = strings.ToLower(strings.Trim(next, ".!?,"))
-			results = Query(fmt.Sprintf("What is the meaning of %s? Be verbose in your answer.", next))
-			fmt.Println(results)
-		}
-	}
-
+// NNMode is the nearest neighbor mode
+func NNMode() {
 	books := LoadBooks()
 	a, b := books[4].Text[9*1024:10*1024], books[5].Text[8*1024:9*1024]
 	fake := []byte(fake[:1024])
@@ -241,7 +258,7 @@ func main() {
 		}
 		return sum
 	}
-	coss := func(a, b []float64) float64 {
+	cs := func(a, b []float64) float64 {
 		aa := dot(a, a)
 		bb := dot(b, b)
 		if aa == 0 {
@@ -252,45 +269,61 @@ func main() {
 		}
 		return dot(a, b) / (math.Sqrt(aa) * math.Sqrt(bb))
 	}
-	fmt.Println(coss(histograms[0][:], histograms[1][:]))
-	fmt.Println(coss(histograms[0][:], histograms[2][:]))
-	fmt.Println(coss(histograms[1][:], histograms[2][:]))
+	fmt.Println(cs(histograms[0][:], histograms[1][:]))
+	fmt.Println(cs(histograms[0][:], histograms[2][:]))
+	fmt.Println(cs(histograms[1][:], histograms[2][:]))
+}
 
-	var classes [4][]byte
+func main() {
+	flag.Parse()
+
+	if *FlagNN {
+		NNMode()
+		return
+	}
+
+	if *FlagQuery != "" {
+		fmt.Println(Query(*FlagQuery))
+		return
+	}
+
+	if *FlagGenerate {
+		rng := rand.New(rand.NewSource(1))
+		results := Query("What is the meaning of life? Be verbose in your answer.")
+		fmt.Println(results)
+		for {
+			words := strings.Fields(results)
+			next := words[rng.Intn(len(words))]
+			next = strings.ToLower(strings.Trim(next, ".!?,"))
+			results = Query(fmt.Sprintf("What is the meaning of %s? Be verbose in your answer.", next))
+			fmt.Println(results)
+		}
+	}
+
+	books := LoadBooks()
+	data := [][]byte{
+		books[4].Text[9*1024 : 10*1024],
+		books[5].Text[8*1024 : 9*1024],
+		[]byte(fake[:1024]),
+	}
+	var classes [][]byte
 	{
-		file, err := Archive.Open("archive.zip")
-		if err != nil {
-			panic(err)
+		count := 0
+		for _, b := range books {
+			if !b.Real {
+				count++
+			}
 		}
-		defer file.Close()
-
-		data, err := io.ReadAll(file)
-		if err != nil {
-			panic(err)
-		}
-
-		reader, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
-		if err != nil {
-			panic(err)
-		}
-		for _, f := range reader.File {
-			if f.Name == "persuade15_claude_instant1.csv" {
-				dat, err := f.Open()
-				if err != nil {
-					panic(err)
-				}
-				classes[0], err = io.ReadAll(dat)
-				if err != nil {
-					panic(err)
-				}
+		index := 0
+		classes = make([][]byte, count)
+		for i := range books {
+			if !books[i].Real {
+				classes[index] = books[i].Text
+				index++
 			}
 		}
 	}
-	classes[1] = books[18].Text
-	classes[2] = books[19].Text
-	classes[3] = books[20].Text
-
-	targets := make([]Target, len(classes))
+	targets := make(Targets, len(classes))
 	for i := range targets {
 		targets[i].Count = make(map[Symbols]uint64)
 	}
@@ -305,13 +338,14 @@ func main() {
 			targets[i].Total++
 		}
 	}
+
 	count := 0
 	for i := range books {
 		if books[i].Real {
 			count++
 		}
 	}
-	reals := make([]Target, count)
+	reals := make(Targets, count)
 	for i := range reals {
 		reals[i].Count = make(map[Symbols]uint64)
 	}
@@ -324,64 +358,40 @@ func main() {
 			if symbol == '\r' || symbol == '\n' {
 				continue
 			}
-			symbols[0], symbols[1] = symbols[1], symbol
+			symbols.Iterate(symbol)
 			reals[i].Count[symbols]++
 			reals[i].Total++
 		}
 	}
-	prob := func(targets []Target, a, b int) float64 {
-		var symbols Symbols
-		sum := 0.0
-		for i := range targets {
-			sum += float64(targets[i].Total)
-		}
-		p := math.Log(float64(targets[a].Total+1) / (sum + float64(len(targets))))
-		set := make(map[Symbols]bool)
-		for _, symbol := range data[b] {
-			if symbol == '\r' || symbol == '\n' {
-				continue
-			}
-			symbols[0], symbols[1] = symbols[1], symbol
-			set[symbols] = true
-		}
-		for symbols := range set {
-			p += math.Log(float64(targets[a].Count[symbols]+1) / (float64(targets[a].Total) + float64(len(targets[a].Count))))
 
-		}
-		return p
-	}
-	fmt.Println()
 	test := func(i int) {
-		a, b, d, e := prob(targets, 0, i), prob(targets, 1, i), prob(targets, 2, i), prob(targets, 3, i)
-		c := [4]int{}
+		data := data[i]
+		scores := make([]float64, len(targets))
+		for i := range scores {
+			scores[i] = targets.Score(i, data)
+		}
+		histogram := make([]int, len(scores))
 		for r := range reals {
-			score := prob(reals, r, i)
-			if a < score {
-				c[0]++
-			}
-			if b < score {
-				c[1]++
-			}
-			if d < score {
-				c[2]++
-			}
-			if e < score {
-				c[3]++
+			score := reals.Score(r, data)
+			for i := range scores {
+				if scores[i] < score {
+					histogram[i]++
+				}
 			}
 		}
 		score := 0
-		for i := range c {
-			if c[i] > count/2 {
+		for i := range histogram {
+			if histogram[i] < count/2 {
 				score++
 			}
 		}
-		if score > 2 {
-			fmt.Println(a, b, d, c, "real")
+		if score > 0 {
+			fmt.Println(scores, histogram, "fake")
 		} else {
-			fmt.Println(a, b, d, c, "fake")
+			fmt.Println(scores, histogram, "real")
 		}
 	}
-	test(0)
-	test(1)
-	test(2)
+	for i := range data {
+		test(i)
+	}
 }
