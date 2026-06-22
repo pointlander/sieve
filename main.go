@@ -457,9 +457,6 @@ func GraphMode() {
 	rng := rand.New(rand.NewSource(1))
 	books := LoadBooks()
 	words := strings.Fields(string(books[0].Text))
-	for i, word := range words {
-		words[i] = strings.Trim(word, ",.!?;'\"`:")
-	}
 	graph := make(map[string]map[string]uint64)
 	for i, word := range words[:len(words)-1] {
 		{
