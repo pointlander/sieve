@@ -408,6 +408,8 @@ var (
 	FlagSample = flag.Bool("sample", false, "generate samples")
 	// FlagMarkov markov mode
 	FlagMarkov = flag.Bool("markov", false, "markov mode")
+	// FlagGraph graphical model
+	FlagGraph = flag.Bool("graph", false, "graphical model")
 )
 
 // NNMode is the nearest neighbor mode
@@ -448,6 +450,75 @@ func NNMode() {
 	fmt.Println(cs(histograms[0][:], histograms[1][:]))
 	fmt.Println(cs(histograms[0][:], histograms[2][:]))
 	fmt.Println(cs(histograms[1][:], histograms[2][:]))
+}
+
+// GraphMode is a graphical model
+func GraphMode() {
+	rng := rand.New(rand.NewSource(1))
+	books := LoadBooks()
+	words := strings.Fields(string(books[0].Text))
+	for i, word := range words {
+		words[i] = strings.Trim(word, ",.!?;'\"`:")
+	}
+	graph := make(map[string]map[string]uint64)
+	for i, word := range words[:len(words)-1] {
+		{
+			node := graph[word]
+			if node == nil {
+				node = make(map[string]uint64)
+			}
+			node[words[i+1]]++
+			graph[word] = node
+		}
+		{
+			node := graph[words[i+1]]
+			if node == nil {
+				node = make(map[string]uint64)
+			}
+			node[word]++
+			graph[words[i+1]] = node
+		}
+	}
+	word := words[0]
+	node := graph[word]
+	ranks := make(map[string]uint64)
+	fmt.Println(len(graph))
+	for range 1024 * 1024 {
+		ranks[word]++
+		sum := uint64(0)
+		for _, value := range node {
+			sum += value
+		}
+		total, selected := uint64(0), uint64(rng.Intn(len(node)))
+		for w, value := range node {
+			total += value
+			if selected < total {
+				word = w
+				node = graph[word]
+				break
+			}
+		}
+	}
+
+	word = "Adam"
+	node = graph[word]
+	for range 33 {
+		fmt.Printf(" %s", word)
+		ranks[word]++
+		sum := uint64(0)
+		for w := range node {
+			sum += ranks[w]
+		}
+		total, selected := uint64(0), uint64(rng.Intn(len(node)))
+		for w := range node {
+			total += ranks[w]
+			if selected < total {
+				word = w
+				node = graph[word]
+				break
+			}
+		}
+	}
 }
 
 func main() {
@@ -502,6 +573,11 @@ var samples = []string{
 
 	if *FlagMarkov {
 		MarkovMode()
+		return
+	}
+
+	if *FlagGraph {
+		GraphMode()
 		return
 	}
 
