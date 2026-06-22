@@ -236,11 +236,149 @@ func (t Targets) Score(a int, data []byte) float64 {
 		symbols.Iterate(symbol)
 		set[symbols] = true
 	}
+	length := float64(len(set))
 	for symbols := range set {
 		p += math.Log(float64(t[a].Count[symbols]+1) / (float64(t[a].Total) + float64(len(t[a].Count))))
 
 	}
-	return p
+	return p / length
+}
+
+// Markov is a markov state
+type Markov [4]byte
+
+// Iterate iterate the symbols
+func (m *Markov) Iterate(n byte) {
+	for i := range m[:len(m)-1] {
+		m[i] = m[i+1]
+	}
+	m[len(m)-1] = n
+}
+
+// Model is a model
+type Model struct {
+	Book
+	Model map[Markov][256]uint64
+}
+
+// Lookup looks up a histogram
+func (m *Model) Lookup(markov Markov) [256]uint64 {
+	for i := range markov {
+		h, contains := m.Model[markov]
+		if contains {
+			return h
+		}
+		markov[len(markov)-1-i] = 0
+	}
+	return m.Model[markov]
+}
+
+// MarkovMode markov mode
+func MarkovMode() {
+	books := LoadBooks()
+	models := make([]Model, 0, 8)
+	for _, book := range books {
+		if book.Real {
+			model := Model{
+				Book:  book,
+				Model: make(map[Markov][256]uint64),
+			}
+			markov := Markov{}
+			for _, symbol := range model.Text {
+				current := markov
+				for i := range current {
+					histogram := model.Model[current]
+					histogram[symbol]++
+					model.Model[current] = histogram
+					current[len(current)-1-i] = 0
+				}
+				histogram := model.Model[current]
+				histogram[symbol]++
+				model.Model[current] = histogram
+				markov.Iterate(symbol)
+			}
+			models = append(models, model)
+		}
+	}
+
+	dot := func(a, b [256]uint64) float64 {
+		sum := 0.0
+		for i, value := range a {
+			sum += float64(value) * float64(b[i])
+		}
+		return sum
+	}
+	cs := func(a, b [256]uint64) float64 {
+		aa := dot(a, a)
+		bb := dot(b, b)
+		if aa == 0 {
+			return 0
+		}
+		if bb == 0 {
+			return 0
+		}
+		return dot(a, b) / (math.Sqrt(aa) * math.Sqrt(bb))
+	}
+
+	markov := Markov{}
+	context := Model{
+		Model: make(map[Markov][256]uint64),
+	}
+	ctxt := []byte("What is the meaning of life?")
+	for _, symbol := range ctxt {
+		current := markov
+		for i := range current {
+			histogram := context.Model[current]
+			histogram[symbol]++
+			context.Model[current] = histogram
+			current[len(current)-1-i] = 0
+		}
+		histogram := context.Model[current]
+		histogram[symbol]++
+		context.Model[current] = histogram
+		markov.Iterate(symbol)
+	}
+
+	rng := rand.New(rand.NewSource(1))
+	for range 8 * 1024 {
+		set := make([][256]uint64, 0, 8)
+		for i := range models {
+			set = append(set, models[i].Lookup(markov))
+		}
+		target := context.Lookup(markov)
+		max, index := 0.0, 0
+		for i := range set {
+			s := cs(set[i], target)
+			if s > max {
+				max, index = s, i
+			}
+		}
+		sum := uint64(0)
+		for _, count := range set[index] {
+			sum += count
+		}
+		symbol, selected, total := byte(0), uint64(rng.Intn(int(sum))), uint64(0)
+		for i, value := range set[index] {
+			total += value
+			if selected < total {
+				symbol = byte(i)
+				break
+			}
+		}
+		fmt.Printf("%c", symbol)
+
+		current := markov
+		for i := range current {
+			histogram := context.Model[current]
+			histogram[symbol]++
+			context.Model[current] = histogram
+			current[len(current)-1-i] = 0
+		}
+		histogram := context.Model[current]
+		histogram[symbol]++
+		context.Model[current] = histogram
+		markov.Iterate(symbol)
+	}
 }
 
 var (
@@ -254,6 +392,8 @@ var (
 	FlagGenerate = flag.Bool("generate", false, "generate content")
 	// FlagSample generates some samples
 	FlagSample = flag.Bool("sample", false, "generate samples")
+	// FlagMarkov markov mode
+	FlagMarkov = flag.Bool("markov", false, "markov mode")
 )
 
 // NNMode is the nearest neighbor mode
@@ -343,6 +483,11 @@ var samples = []string{
 			fmt.Fprintf(output, "`%s`,\n", results)
 		}
 		fmt.Fprintf(output, "}")
+		return
+	}
+
+	if *FlagMarkov {
+		MarkovMode()
 		return
 	}
 
