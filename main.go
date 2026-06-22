@@ -319,6 +319,18 @@ func MarkovMode() {
 		}
 		return dot(a, b) / (math.Sqrt(aa) * math.Sqrt(bb))
 	}
+	entropy := func(a [256]uint64) float64 {
+		sum := 0.0
+		for _, value := range a {
+			sum += float64(value)
+		}
+		entropy := 0.0
+		for _, value := range a {
+			p := float64(value) / sum
+			entropy += p * math.Log2(p)
+		}
+		return -entropy
+	}
 
 	markov := Markov{}
 	context := Model{
@@ -345,12 +357,14 @@ func MarkovMode() {
 		for i := range models {
 			set = append(set, models[i].Lookup(markov))
 		}
-		target := context.Lookup(markov)
-		max, index := 0.0, 0
+		//target := context.Lookup(markov)
+		min, index := math.MaxFloat64, 0
+		_ = cs
 		for i := range set {
-			s := cs(set[i], target)
-			if s > max {
-				max, index = s, i
+			//s := cs(set[i], target)
+			s := entropy(set[i])
+			if s < min {
+				min, index = s, i
 			}
 		}
 		sum := uint64(0)
