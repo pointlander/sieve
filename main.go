@@ -477,19 +477,16 @@ func (g *Graph) Learn(iterations int, rng *rand.Rand, words []string) {
 			node[words[i+1]]++
 			g.Graph[word] = node
 		}
-		{
-			node := g.Graph[words[i+1]]
-			if node == nil {
-				node = make(map[string]uint64)
-			}
-			node[word]++
-			g.Graph[words[i+1]] = node
-		}
 	}
 	word := words[0]
 	node := g.Graph[word]
 	for range iterations {
 		g.Ranks[word]++
+		if len(node) == 0 {
+			index := rng.Intn(len(words))
+			word = words[index]
+			node = g.Graph[word]
+		}
 		sum := uint64(0)
 		for _, value := range node {
 			sum += value
@@ -513,7 +510,7 @@ func GraphMode() {
 	words := strings.Fields(string(books[0].Text))
 	g := NewGraph()
 	g.Learn(1024*1024, rng, words)
-	word := "Adam"
+	word := "God"
 	node := g.Graph[word]
 	for range 33 {
 		fmt.Printf(" %s", word)
