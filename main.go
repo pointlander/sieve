@@ -452,36 +452,44 @@ func NNMode() {
 	fmt.Println(cs(histograms[1][:], histograms[2][:]))
 }
 
-// GraphMode is a graphical model
-func GraphMode() {
-	rng := rand.New(rand.NewSource(1))
-	books := LoadBooks()
-	words := strings.Fields(string(books[0].Text))
-	graph := make(map[string]map[string]uint64)
+// Graph is a graph
+type Graph struct {
+	Graph map[string]map[string]uint64
+	Ranks map[string]uint64
+}
+
+// NewGraph makes a new graph
+func NewGraph() Graph {
+	return Graph{
+		Graph: make(map[string]map[string]uint64),
+		Ranks: make(map[string]uint64),
+	}
+}
+
+// Learn learns a model
+func (g *Graph) Learn(iterations int, rng *rand.Rand, words []string) {
 	for i, word := range words[:len(words)-1] {
 		{
-			node := graph[word]
+			node := g.Graph[word]
 			if node == nil {
 				node = make(map[string]uint64)
 			}
 			node[words[i+1]]++
-			graph[word] = node
+			g.Graph[word] = node
 		}
 		{
-			node := graph[words[i+1]]
+			node := g.Graph[words[i+1]]
 			if node == nil {
 				node = make(map[string]uint64)
 			}
 			node[word]++
-			graph[words[i+1]] = node
+			g.Graph[words[i+1]] = node
 		}
 	}
 	word := words[0]
-	node := graph[word]
-	ranks := make(map[string]uint64)
-	fmt.Println(len(graph))
-	for range 1024 * 1024 {
-		ranks[word]++
+	node := g.Graph[word]
+	for range iterations {
+		g.Ranks[word]++
 		sum := uint64(0)
 		for _, value := range node {
 			sum += value
@@ -491,27 +499,34 @@ func GraphMode() {
 			total += value
 			if selected < total {
 				word = w
-				node = graph[word]
+				node = g.Graph[word]
 				break
 			}
 		}
 	}
+}
 
-	word = "Adam"
-	node = graph[word]
+// GraphMode is a graphical model
+func GraphMode() {
+	rng := rand.New(rand.NewSource(1))
+	books := LoadBooks()
+	words := strings.Fields(string(books[0].Text))
+	g := NewGraph()
+	g.Learn(1024*1024, rng, words)
+	word := "Adam"
+	node := g.Graph[word]
 	for range 33 {
 		fmt.Printf(" %s", word)
-		ranks[word]++
 		sum := uint64(0)
 		for w := range node {
-			sum += ranks[w]
+			sum += g.Ranks[w]
 		}
 		total, selected := uint64(0), uint64(rng.Intn(len(node)))
 		for w := range node {
-			total += ranks[w]
+			total += g.Ranks[w]
 			if selected < total {
 				word = w
-				node = graph[word]
+				node = g.Graph[word]
 				break
 			}
 		}
