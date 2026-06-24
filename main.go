@@ -556,7 +556,14 @@ func GraphMode() {
 	{
 		suffix := strings.Fields(samples[0])
 		cp := make([]string, len(words))
+		has, list := make(map[string]bool), make([]string, 0, 8)
 		copy(cp, words)
+		for _, word := range cp {
+			if !has[word] {
+				has[word] = true
+				list = append(list, word)
+			}
+		}
 		words := append(cp, suffix...)
 		g := NewGraph()
 		g.Learn(8*1024*1024, rng, words)
@@ -570,11 +577,36 @@ func GraphMode() {
 			entropy += p * math.Log2(p)
 		}
 		fmt.Println(-entropy)
+		{
+			max := 0.0
+			for range list {
+				p := 1 / float64(len(list))
+				max += p * math.Log2(p)
+			}
+			fmt.Println("max", -max)
+			sum := uint64(0)
+			for _, value := range list {
+				sum += g.Ranks[value]
+			}
+			entropy := 0.0
+			for _, value := range list {
+				p := float64(g.Ranks[value]) / float64(sum)
+				entropy += p * math.Log2(p)
+			}
+			fmt.Println(-entropy)
+		}
 	}
 	{
 		suffix := strings.Fields(string(books[1].Text[8*1024 : 9*1024]))
 		cp := make([]string, len(words))
 		copy(cp, words)
+		has, list := make(map[string]bool), make([]string, 0, 8)
+		for _, word := range cp {
+			if !has[word] {
+				has[word] = true
+				list = append(list, word)
+			}
+		}
 		words := append(cp, suffix...)
 		g := NewGraph()
 		g.Learn(8*1024*1024, rng, words)
@@ -588,6 +620,24 @@ func GraphMode() {
 			entropy += p * math.Log2(p)
 		}
 		fmt.Println(-entropy)
+		{
+			max := 0.0
+			for range list {
+				p := 1 / float64(len(list))
+				max += p * math.Log2(p)
+			}
+			fmt.Println("max", -max)
+			sum := uint64(0)
+			for _, value := range list {
+				sum += g.Ranks[value]
+			}
+			entropy := 0.0
+			for _, value := range list {
+				p := float64(g.Ranks[value]) / float64(sum)
+				entropy += p * math.Log2(p)
+			}
+			fmt.Println(-entropy)
+		}
 	}
 }
 
