@@ -509,7 +509,7 @@ func GraphMode() {
 	books := LoadBooks()
 	words := strings.Fields(string(books[0].Text))
 	g := NewGraph()
-	g.Learn(1024*1024, rng, words)
+	g.Learn(8*1024*1024, rng, words)
 	word := "God"
 	node := g.Graph[word]
 	for range 33 {
