@@ -496,7 +496,12 @@ func (g *Graph) Learn(iterations int, rng *rand.Rand, words []string) {
 	node := g.Graph[word]
 	for range iterations {
 		g.Ranks[word]++
-		if len(node.Keys) == 0 || rng.Float64() > .9 {
+		if rng.Float64() > .9 {
+			index := rng.Intn(len(words))
+			word = words[index]
+			node = g.Graph[word]
+		}
+		for len(node.Keys) == 0 {
 			index := rng.Intn(len(words))
 			word = words[index]
 			node = g.Graph[word]
@@ -518,10 +523,9 @@ func (g *Graph) Learn(iterations int, rng *rand.Rand, words []string) {
 }
 
 // GraphMode is a graphical model
-func GraphMode() {
+func GraphMode(text, alt string) {
 	rng := rand.New(rand.NewSource(1))
-	books := LoadBooks()
-	words := strings.Fields(string(books[0].Text))
+	words := strings.Fields(text)
 	g := NewGraph()
 	g.Learn(8*1024*1024, rng, words)
 	word := "God"
@@ -531,6 +535,12 @@ func GraphMode() {
 		sum := uint64(0)
 		for _, w := range node.Keys {
 			sum += g.Ranks[w]
+		}
+		for sum == 0 {
+			node = g.Graph[words[rng.Intn(len(words))]]
+			for _, w := range node.Keys {
+				sum += g.Ranks[w]
+			}
 		}
 		total, selected := uint64(0), uint64(rng.Intn(int(sum)))
 		for _, w := range node.Keys {
@@ -549,16 +559,19 @@ func GraphMode() {
 	}
 	entropy := 0.0
 	for _, value := range g.Keys {
+		if g.Ranks[value] == 0 {
+			continue
+		}
 		p := float64(g.Ranks[value]) / float64(sum)
 		entropy += p * math.Log2(p)
 	}
 	fmt.Println(-entropy)
 	{
-		suffix := strings.Fields(samples[0])
+		suffix := strings.Fields(samples[0][:1024])
 		cp := make([]string, len(words))
-		has, list := make(map[string]bool), make([]string, 0, 8)
 		copy(cp, words)
-		for _, word := range cp {
+		has, list := make(map[string]bool), make([]string, 0, 8)
+		for _, word := range suffix {
 			if !has[word] {
 				has[word] = true
 				list = append(list, word)
@@ -573,6 +586,9 @@ func GraphMode() {
 		}
 		entropy := 0.0
 		for _, value := range g.Keys {
+			if g.Ranks[value] == 0 {
+				continue
+			}
 			p := float64(g.Ranks[value]) / float64(sum)
 			entropy += p * math.Log2(p)
 		}
@@ -590,6 +606,9 @@ func GraphMode() {
 			}
 			entropy := 0.0
 			for _, value := range list {
+				if g.Ranks[value] == 0 {
+					continue
+				}
 				p := float64(g.Ranks[value]) / float64(sum)
 				entropy += p * math.Log2(p)
 			}
@@ -597,11 +616,11 @@ func GraphMode() {
 		}
 	}
 	{
-		suffix := strings.Fields(string(books[1].Text[8*1024 : 9*1024]))
+		suffix := strings.Fields(alt)
 		cp := make([]string, len(words))
 		copy(cp, words)
 		has, list := make(map[string]bool), make([]string, 0, 8)
-		for _, word := range cp {
+		for _, word := range suffix {
 			if !has[word] {
 				has[word] = true
 				list = append(list, word)
@@ -616,6 +635,9 @@ func GraphMode() {
 		}
 		entropy := 0.0
 		for _, value := range g.Keys {
+			if g.Ranks[value] == 0 {
+				continue
+			}
 			p := float64(g.Ranks[value]) / float64(sum)
 			entropy += p * math.Log2(p)
 		}
@@ -633,6 +655,9 @@ func GraphMode() {
 			}
 			entropy := 0.0
 			for _, value := range list {
+				if g.Ranks[value] == 0 {
+					continue
+				}
 				p := float64(g.Ranks[value]) / float64(sum)
 				entropy += p * math.Log2(p)
 			}
@@ -697,7 +722,10 @@ var samples = []string{
 	}
 
 	if *FlagGraph {
-		GraphMode()
+		books := LoadBooks()
+		GraphMode(string(books[0].Text), string(books[1].Text[8*1024:9*1024]))
+		fmt.Println()
+		GraphMode(string(books[18].Text), string(books[1].Text[8*1024:9*1024]))
 		return
 	}
 
