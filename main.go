@@ -460,6 +460,7 @@ type Node struct {
 
 // Graph is a graph
 type Graph struct {
+	Keys  []string
 	Graph map[string]Node
 	Ranks map[string]uint64
 }
@@ -478,6 +479,7 @@ func (g *Graph) Learn(iterations int, rng *rand.Rand, words []string) {
 		{
 			node := g.Graph[word]
 			if node.Links == nil {
+				g.Keys = append(g.Keys, word)
 				node.Links = make(map[string]uint64)
 				node.Keys = make([]string, 0, 8)
 			}
@@ -542,12 +544,12 @@ func GraphMode() {
 	}
 	fmt.Println()
 	sum := uint64(0)
-	for _, value := range g.Ranks {
-		sum += value
+	for _, value := range g.Keys {
+		sum += g.Ranks[value]
 	}
 	entropy := 0.0
-	for _, value := range g.Ranks {
-		p := float64(value) / float64(sum)
+	for _, value := range g.Keys {
+		p := float64(g.Ranks[value]) / float64(sum)
 		entropy += p * math.Log2(p)
 	}
 	fmt.Println(-entropy)
@@ -559,12 +561,12 @@ func GraphMode() {
 		g := NewGraph()
 		g.Learn(8*1024*1024, rng, words)
 		sum := uint64(0)
-		for _, value := range g.Ranks {
-			sum += value
+		for _, value := range g.Keys {
+			sum += g.Ranks[value]
 		}
 		entropy := 0.0
-		for _, value := range g.Ranks {
-			p := float64(value) / float64(sum)
+		for _, value := range g.Keys {
+			p := float64(g.Ranks[value]) / float64(sum)
 			entropy += p * math.Log2(p)
 		}
 		fmt.Println(-entropy)
@@ -577,12 +579,12 @@ func GraphMode() {
 		g := NewGraph()
 		g.Learn(8*1024*1024, rng, words)
 		sum := uint64(0)
-		for _, value := range g.Ranks {
-			sum += value
+		for _, value := range g.Keys {
+			sum += g.Ranks[value]
 		}
 		entropy := 0.0
-		for _, value := range g.Ranks {
-			p := float64(value) / float64(sum)
+		for _, value := range g.Keys {
+			p := float64(g.Ranks[value]) / float64(sum)
 			entropy += p * math.Log2(p)
 		}
 		fmt.Println(-entropy)
