@@ -528,6 +528,53 @@ func GraphMode() {
 			}
 		}
 	}
+	fmt.Println()
+	sum := uint64(0)
+	for _, value := range g.Ranks {
+		sum += value
+	}
+	entropy := 0.0
+	for _, value := range g.Ranks {
+		p := float64(value) / float64(sum)
+		entropy += p * math.Log2(p)
+	}
+	fmt.Println(-entropy)
+	{
+		suffix := strings.Fields(samples[0])
+		cp := make([]string, len(words))
+		copy(cp, words)
+		words := append(cp, suffix...)
+		g := NewGraph()
+		g.Learn(8*1024*1024, rng, words)
+		sum := uint64(0)
+		for _, value := range g.Ranks {
+			sum += value
+		}
+		entropy := 0.0
+		for _, value := range g.Ranks {
+			p := float64(value) / float64(sum)
+			entropy += p * math.Log2(p)
+		}
+		fmt.Println(-entropy)
+	}
+	{
+		suffix := strings.Fields(string(books[1].Text[8*1024 : 9*1024]))
+		cp := make([]string, len(words))
+		copy(cp, words)
+		words := append(cp, suffix...)
+		g := NewGraph()
+		g.Learn(8*1024*1024, rng, words)
+		sum := uint64(0)
+		for _, value := range g.Ranks {
+			sum += value
+		}
+		entropy := 0.0
+		for _, value := range g.Ranks {
+			p := float64(value) / float64(sum)
+			entropy += p * math.Log2(p)
+		}
+		fmt.Println(-entropy)
+	}
 }
 
 func main() {
