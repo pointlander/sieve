@@ -482,7 +482,7 @@ func (g *Graph) Learn(iterations int, rng *rand.Rand, words []string) {
 	node := g.Graph[word]
 	for range iterations {
 		g.Ranks[word]++
-		if len(node) == 0 {
+		if len(node) == 0 || rng.Float64() > .9 {
 			index := rng.Intn(len(words))
 			word = words[index]
 			node = g.Graph[word]
