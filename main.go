@@ -452,16 +452,22 @@ func NNMode() {
 	fmt.Println(cs(histograms[1][:], histograms[2][:]))
 }
 
+// Node is a node in a graph
+type Node struct {
+	Links map[string]uint64
+	Keys  []string
+}
+
 // Graph is a graph
 type Graph struct {
-	Graph map[string]map[string]uint64
+	Graph map[string]Node
 	Ranks map[string]uint64
 }
 
 // NewGraph makes a new graph
 func NewGraph() Graph {
 	return Graph{
-		Graph: make(map[string]map[string]uint64),
+		Graph: make(map[string]Node),
 		Ranks: make(map[string]uint64),
 	}
 }
@@ -471,10 +477,16 @@ func (g *Graph) Learn(iterations int, rng *rand.Rand, words []string) {
 	for i, word := range words[:len(words)-1] {
 		{
 			node := g.Graph[word]
-			if node == nil {
-				node = make(map[string]uint64)
+			if node.Links == nil {
+				node.Links = make(map[string]uint64)
+				node.Keys = make([]string, 0, 8)
 			}
-			node[words[i+1]]++
+			count, ok := node.Links[words[i+1]]
+			if !ok {
+				node.Keys = append(node.Keys, words[i+1])
+			}
+			count++
+			node.Links[words[i+1]] = count
 			g.Graph[word] = node
 		}
 	}
@@ -482,20 +494,20 @@ func (g *Graph) Learn(iterations int, rng *rand.Rand, words []string) {
 	node := g.Graph[word]
 	for range iterations {
 		g.Ranks[word]++
-		if len(node) == 0 || rng.Float64() > .9 {
+		if len(node.Keys) == 0 || rng.Float64() > .9 {
 			index := rng.Intn(len(words))
 			word = words[index]
 			node = g.Graph[word]
 		}
 		sum := uint64(0)
-		for _, value := range node {
-			sum += value
+		for _, value := range node.Keys {
+			sum += node.Links[value]
 		}
-		total, selected := uint64(0), uint64(rng.Intn(len(node)))
-		for w, value := range node {
-			total += value
+		total, selected := uint64(0), uint64(rng.Intn(int(sum)))
+		for _, value := range node.Keys {
+			total += node.Links[value]
 			if selected < total {
-				word = w
+				word = value
 				node = g.Graph[word]
 				break
 			}
@@ -515,11 +527,11 @@ func GraphMode() {
 	for range 33 {
 		fmt.Printf(" %s", word)
 		sum := uint64(0)
-		for w := range node {
+		for _, w := range node.Keys {
 			sum += g.Ranks[w]
 		}
-		total, selected := uint64(0), uint64(rng.Intn(len(node)))
-		for w := range node {
+		total, selected := uint64(0), uint64(rng.Intn(int(sum)))
+		for _, w := range node.Keys {
 			total += g.Ranks[w]
 			if selected < total {
 				word = w
