@@ -723,9 +723,14 @@ var samples = []string{
 
 	if *FlagGraph {
 		books := LoadBooks()
+		fmt.Println("bible")
 		GraphMode(string(books[0].Text), string(books[1].Text[8*1024:9*1024]))
-		fmt.Println()
+		fmt.Println("gemma")
 		GraphMode(string(books[18].Text), string(books[1].Text[8*1024:9*1024]))
+		fmt.Println("gpt")
+		GraphMode(string(books[19].Text), string(books[1].Text[8*1024:9*1024]))
+		fmt.Println("llama")
+		GraphMode(string(books[20].Text), string(books[1].Text[8*1024:9*1024]))
 		return
 	}
 
