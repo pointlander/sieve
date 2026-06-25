@@ -410,6 +410,8 @@ var (
 	FlagMarkov = flag.Bool("markov", false, "markov mode")
 	// FlagGraph graphical model
 	FlagGraph = flag.Bool("graph", false, "graphical model")
+	// FlagVerse generate text
+	FlagVerse = flag.String("verse", "", "generate text")
 )
 
 // NNMode is the nearest neighbor mode
@@ -666,6 +668,38 @@ func GraphMode(text, alt string) {
 	}
 }
 
+// VerseMode generate text
+func VerseMode(text string) {
+	rng := rand.New(rand.NewSource(1))
+	words := strings.Fields(text)
+	g := NewGraph()
+	g.Learn(8*1024*1024, rng, words)
+	word := *FlagVerse
+	node := g.Graph[word]
+	for range 33 {
+		fmt.Printf(" %s", word)
+		sum := uint64(0)
+		for _, w := range node.Keys {
+			sum += g.Ranks[w]
+		}
+		for sum == 0 {
+			node = g.Graph[words[rng.Intn(len(words))]]
+			for _, w := range node.Keys {
+				sum += g.Ranks[w]
+			}
+		}
+		total, selected := uint64(0), uint64(rng.Intn(int(sum)))
+		for _, w := range node.Keys {
+			total += g.Ranks[w]
+			if selected < total {
+				word = w
+				node = g.Graph[word]
+				break
+			}
+		}
+	}
+}
+
 func main() {
 	flag.Parse()
 
@@ -731,6 +765,12 @@ var samples = []string{
 		GraphMode(string(books[19].Text), string(books[1].Text[8*1024:9*1024]))
 		fmt.Println("llama")
 		GraphMode(string(books[20].Text), string(books[1].Text[8*1024:9*1024]))
+		return
+	}
+
+	if *FlagVerse != "" {
+		books := LoadBooks()
+		VerseMode(string(books[0].Text))
 		return
 	}
 
