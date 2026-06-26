@@ -18,6 +18,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"sort"
 	"strings"
 )
 
@@ -686,29 +687,45 @@ func VerseMode(text string) {
 	if err != nil {
 		panic(err)
 	}
-	word := *FlagVerse
-	node := g.Graph[word]
-	for range 33 {
-		fmt.Printf(" %s", word)
-		sum := uint64(0)
-		for _, w := range node.Keys {
-			sum += g.Ranks[w]
-		}
-		for sum == 0 {
-			node = g.Graph[words[rng.Intn(len(words))]]
+	type Trace struct {
+		Trace string
+		Value uint64
+	}
+	set := make([]Trace, 0, 8)
+	for range 512 {
+		word := *FlagVerse
+		node := g.Graph[word]
+		trace := Trace{}
+		for range 33 {
+			trace.Trace = trace.Trace + word + " "
+			trace.Value += g.Ranks[word]
+			sum := uint64(0)
 			for _, w := range node.Keys {
 				sum += g.Ranks[w]
 			}
-		}
-		total, selected := uint64(0), uint64(rng.Intn(int(sum)))
-		for _, w := range node.Keys {
-			total += g.Ranks[w]
-			if selected < total {
-				word = w
-				node = g.Graph[word]
-				break
+			for sum == 0 {
+				node = g.Graph[words[rng.Intn(len(words))]]
+				for _, w := range node.Keys {
+					sum += g.Ranks[w]
+				}
+			}
+			total, selected := uint64(0), uint64(rng.Intn(int(sum)))
+			for _, w := range node.Keys {
+				total += g.Ranks[w]
+				if selected < total {
+					word = w
+					node = g.Graph[word]
+					break
+				}
 			}
 		}
+		set = append(set, trace)
+	}
+	sort.Slice(set, func(i, j int) bool {
+		return set[i].Value < set[j].Value
+	})
+	for _, trace := range set {
+		fmt.Println(trace.Value, trace.Trace)
 	}
 }
 
