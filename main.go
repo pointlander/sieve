@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"compress/bzip2"
 	"embed"
+	"encoding/gob"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -412,6 +413,8 @@ var (
 	FlagGraph = flag.Bool("graph", false, "graphical model")
 	// FlagVerse generate text
 	FlagVerse = flag.String("verse", "", "generate text")
+	// FlagPre pre-generate model
+	FlagPre = flag.Bool("pre", false, "pre-generate model")
 )
 
 // NNMode is the nearest neighbor mode
@@ -673,7 +676,16 @@ func VerseMode(text string) {
 	rng := rand.New(rand.NewSource(1))
 	words := strings.Fields(text)
 	g := NewGraph()
-	g.Learn(8*1024*1024, rng, words)
+	input, err := os.Open("pre.gob")
+	if err != nil {
+		panic(err)
+	}
+	defer input.Close()
+	decoder := gob.NewDecoder(input)
+	err = decoder.Decode(&g)
+	if err != nil {
+		panic(err)
+	}
 	word := *FlagVerse
 	node := g.Graph[word]
 	for range 33 {
@@ -697,6 +709,24 @@ func VerseMode(text string) {
 				break
 			}
 		}
+	}
+}
+
+// PreMode pre-generate model
+func PreMode(text string) {
+	rng := rand.New(rand.NewSource(1))
+	words := strings.Fields(text)
+	g := NewGraph()
+	g.Learn(8*1024*1024, rng, words)
+	output, err := os.Create("pre.gob")
+	if err != nil {
+		panic(err)
+	}
+	defer output.Close()
+	encoder := gob.NewEncoder(output)
+	err = encoder.Encode(g)
+	if err != nil {
+		panic(err)
 	}
 }
 
@@ -771,6 +801,12 @@ var samples = []string{
 	if *FlagVerse != "" {
 		books := LoadBooks()
 		VerseMode(string(books[0].Text))
+		return
+	}
+
+	if *FlagPre {
+		books := LoadBooks()
+		PreMode(string(books[0].Text))
 		return
 	}
 
