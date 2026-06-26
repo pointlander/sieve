@@ -469,6 +469,7 @@ type Graph struct {
 	Keys  []string
 	Graph map[string]Node
 	Ranks map[string]uint64
+	Diff  map[string]uint64
 }
 
 // NewGraph makes a new graph
@@ -525,6 +526,83 @@ func (g *Graph) Learn(iterations int, rng *rand.Rand, words []string) {
 				break
 			}
 		}
+	}
+}
+
+// Add adds context to a model
+func (g *Graph) Add(iterations int, rng *rand.Rand, words []string) {
+	sum, count := uint64(0), uint64(0)
+	for _, key := range g.Keys {
+		node := g.Graph[key]
+		for _, key := range node.Keys {
+			sum += node.Links[key]
+			count++
+		}
+	}
+	avg := float64(sum) / float64(count)
+	stddev := 0.0
+	for _, key := range g.Keys {
+		node := g.Graph[key]
+		for _, key := range node.Keys {
+			diff := float64(node.Links[key]) - avg
+			stddev += diff * diff
+		}
+	}
+	stddev = math.Sqrt(stddev / float64(count))
+	for i, word := range words[:len(words)-1] {
+		{
+			node := g.Graph[word]
+			if node.Links == nil {
+				g.Keys = append(g.Keys, word)
+				node.Links = make(map[string]uint64)
+				node.Keys = make([]string, 0, 8)
+			}
+			count, ok := node.Links[words[i+1]]
+			if !ok {
+				node.Keys = append(node.Keys, words[i+1])
+			}
+			count += uint64(3 * stddev)
+			node.Links[words[i+1]] = count
+			g.Graph[word] = node
+		}
+	}
+	if g.Diff == nil {
+		g.Diff = make(map[string]uint64)
+	}
+	word := words[0]
+	node := g.Graph[word]
+	for range iterations {
+		g.Diff[word]++
+		if rng.Float64() > .9 {
+			index := rng.Intn(len(words))
+			word = words[index]
+			node = g.Graph[word]
+		}
+		for len(node.Keys) == 0 {
+			index := rng.Intn(len(words))
+			word = words[index]
+			node = g.Graph[word]
+		}
+		sum := uint64(0)
+		for _, value := range node.Keys {
+			sum += node.Links[value]
+		}
+		total, selected := uint64(0), uint64(rng.Intn(int(sum)))
+		for _, value := range node.Keys {
+			total += node.Links[value]
+			if selected < total {
+				word = value
+				node = g.Graph[word]
+				break
+			}
+		}
+	}
+	for key, value := range g.Diff {
+		diff := int(value) - int(g.Ranks[key])
+		if diff < 0 {
+			diff = -diff
+		}
+		g.Diff[key] = uint64(diff)
 	}
 }
 
@@ -692,26 +770,27 @@ func VerseMode(text string) {
 		Value uint64
 	}
 	set := make([]Trace, 0, 8)
-	for range 512 {
-		word := *FlagVerse
+	g.Add(8*1024*1024, rng, words)
+	for range 1024 {
+		word := words[0]
 		node := g.Graph[word]
 		trace := Trace{}
 		for range 33 {
 			trace.Trace = trace.Trace + word + " "
-			trace.Value += g.Ranks[word]
+			trace.Value += g.Diff[word]
 			sum := uint64(0)
 			for _, w := range node.Keys {
-				sum += g.Ranks[w]
+				sum += g.Diff[w]
 			}
 			for sum == 0 {
 				node = g.Graph[words[rng.Intn(len(words))]]
 				for _, w := range node.Keys {
-					sum += g.Ranks[w]
+					sum += g.Diff[w]
 				}
 			}
 			total, selected := uint64(0), uint64(rng.Intn(int(sum)))
 			for _, w := range node.Keys {
-				total += g.Ranks[w]
+				total += g.Diff[w]
 				if selected < total {
 					word = w
 					node = g.Graph[word]
@@ -816,8 +895,7 @@ var samples = []string{
 	}
 
 	if *FlagVerse != "" {
-		books := LoadBooks()
-		VerseMode(string(books[0].Text))
+		VerseMode(*FlagVerse)
 		return
 	}
 
