@@ -698,6 +698,20 @@ func GraphMode(text, alt string) {
 			}
 			fmt.Println(-entropy)
 		}
+		{
+			sum := uint64(0)
+			for _, value := range list {
+				sum += g.Ranks[value]
+			}
+			fmt.Println(float64(sum) / float64(len(list)))
+		}
+		{
+			sum := uint64(0)
+			for _, value := range words {
+				sum += g.Ranks[value]
+			}
+			fmt.Println(float64(sum) / float64(len(words)))
+		}
 	}
 	{
 		suffix := strings.Fields(alt)
@@ -746,6 +760,20 @@ func GraphMode(text, alt string) {
 				entropy += p * math.Log2(p)
 			}
 			fmt.Println(-entropy)
+		}
+		{
+			sum := uint64(0)
+			for _, value := range list {
+				sum += g.Ranks[value]
+			}
+			fmt.Println(float64(sum) / float64(len(list)))
+		}
+		{
+			sum := uint64(0)
+			for _, value := range words {
+				sum += g.Ranks[value]
+			}
+			fmt.Println(float64(sum) / float64(len(words)))
 		}
 	}
 }
