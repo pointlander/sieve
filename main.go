@@ -141,6 +141,11 @@ func LoadBooks() []Book {
 			Name:  "llama3.1.txt.bz2",
 			Index: 20,
 		},
+		{
+			Real:  true,
+			Name:  "lm.txt.bz2",
+			Index: 21,
+		},
 	}
 	load := func(book string) []byte {
 		file, err := Books.Open(book)
@@ -935,7 +940,7 @@ var samples = []string{
 
 	if *FlagGraph {
 		books := LoadBooks()
-		g := GraphMode(books, 0, string(books[1].Text[8*1024:9*1024]))
+		g := GraphMode(books, 21, string(books[1].Text[8*1024:9*1024]))
 		g.Process()
 		g = GraphMode(books, 18, string(books[1].Text[8*1024:9*1024]))
 		g.Process()
