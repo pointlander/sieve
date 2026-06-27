@@ -18,6 +18,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"runtime"
 	"sort"
 	"strings"
 )
@@ -421,6 +422,8 @@ var (
 	FlagVerse = flag.String("verse", "", "generate text")
 	// FlagPre pre-generate model
 	FlagPre = flag.Bool("pre", false, "pre-generate model")
+	// FlagCal calibrate
+	FlagCal = flag.Bool("cal", false, "calibrate")
 )
 
 // NNMode is the nearest neighbor mode
@@ -883,6 +886,88 @@ func PreMode(text string) {
 	}
 }
 
+const (
+	Avg    = 22312.347726174572
+	Stddev = 351.83476026650527
+)
+
+// CalMode calibrate
+func CalMode() {
+	books := LoadBooks()
+	rng := rand.New(rand.NewSource(1))
+	text := string(books[0].Text)
+	words := strings.Fields(text)
+
+	done := make(chan float64, 8)
+	cal := func(alt string) {
+		rng := rand.New(rand.NewSource(1))
+		suffix := strings.Fields(alt)
+		cp := make([]string, len(words))
+		copy(cp, words)
+		has, list := make(map[string]bool), make([]string, 0, 8)
+		for _, word := range suffix {
+			if !has[word] {
+				has[word] = true
+				list = append(list, word)
+			}
+		}
+		words := append(cp, suffix...)
+		g := NewGraph()
+		g.Learn(8*1024*1024, rng, words)
+		result := 0.0
+		{
+			sum := uint64(0)
+			for _, value := range list {
+				sum += g.Ranks[value]
+			}
+			result = float64(sum) / float64(len(list))
+			fmt.Println(result)
+		}
+		done <- result
+	}
+	c, flight, cpus := 0, 0, runtime.NumCPU()
+	for c < 32 && flight < cpus {
+		book := rng.Intn(18)
+		length := len(books[book].Text)
+		count := length/1024 - 1
+		index := rng.Intn(count)
+		go cal(string(books[book].Text[index*1024 : (index+1)*1024]))
+		c++
+		flight++
+	}
+	results := make([]float64, 0, 32)
+	for c < 32 {
+		result := <-done
+		results = append(results, result)
+		flight--
+
+		book := rng.Intn(18)
+		length := len(books[book].Text)
+		count := length/1024 - 1
+		index := rng.Intn(count)
+		go cal(string(books[book].Text[index*1024 : (index+1)*1024]))
+		c++
+		flight++
+	}
+	for range flight {
+		result := <-done
+		results = append(results, result)
+	}
+
+	sum := 0.0
+	for _, value := range results {
+		sum += value
+	}
+	avg := sum / float64(len(results))
+	stddev := 0.0
+	for _, value := range results {
+		diff := value - avg
+		stddev = diff * diff
+	}
+	stddev = math.Sqrt(stddev / float64(len(results)))
+	fmt.Println(avg, stddev)
+}
+
 func main() {
 	flag.Parse()
 
@@ -959,6 +1044,11 @@ var samples = []string{
 	if *FlagPre {
 		books := LoadBooks()
 		PreMode(string(books[0].Text))
+		return
+	}
+
+	if *FlagCal {
+		CalMode()
 		return
 	}
 
