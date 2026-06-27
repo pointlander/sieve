@@ -606,51 +606,154 @@ func (g *Graph) Add(iterations int, rng *rand.Rand, words []string) {
 	}
 }
 
-// GraphMode is a graphical model
-func GraphMode(text, alt string) {
+// Result is a result
+type Result struct {
+	Graph
+	List []string
+}
+
+// GraphResults graph results
+type GraphResults struct {
+	A     chan Graph
+	B     chan Result
+	C     chan Result
+	Text  int
+	Books []Book
+}
+
+// Process process results
+func (g GraphResults) Process() {
 	rng := rand.New(rand.NewSource(1))
+	text := string(g.Books[g.Text].Text)
 	words := strings.Fields(text)
-	g := NewGraph()
-	g.Learn(8*1024*1024, rng, words)
+
+	gA := <-g.A
+	gB := <-g.B
+	gC := <-g.C
+
+	fmt.Println(g.Books[g.Text].Name)
 	word := "God"
-	node := g.Graph[word]
+	node := gA.Graph[word]
 	for range 33 {
 		fmt.Printf(" %s", word)
 		sum := uint64(0)
 		for _, w := range node.Keys {
-			sum += g.Ranks[w]
+			sum += gA.Ranks[w]
 		}
 		for sum == 0 {
-			node = g.Graph[words[rng.Intn(len(words))]]
+			node = gA.Graph[words[rng.Intn(len(words))]]
 			for _, w := range node.Keys {
-				sum += g.Ranks[w]
+				sum += gA.Ranks[w]
 			}
 		}
 		total, selected := uint64(0), uint64(rng.Intn(int(sum)))
 		for _, w := range node.Keys {
-			total += g.Ranks[w]
+			total += gA.Ranks[w]
 			if selected < total {
 				word = w
-				node = g.Graph[word]
+				node = gA.Graph[word]
 				break
 			}
 		}
 	}
 	fmt.Println()
 	sum := uint64(0)
-	for _, value := range g.Keys {
-		sum += g.Ranks[value]
+	for _, value := range gA.Keys {
+		sum += gA.Ranks[value]
 	}
 	entropy := 0.0
-	for _, value := range g.Keys {
-		if g.Ranks[value] == 0 {
+	for _, value := range gA.Keys {
+		if gA.Ranks[value] == 0 {
 			continue
 		}
-		p := float64(g.Ranks[value]) / float64(sum)
+		p := float64(gA.Ranks[value]) / float64(sum)
 		entropy += p * math.Log2(p)
 	}
 	fmt.Println(-entropy)
-	{
+	process := func(r Result) (result float64) {
+		sum := uint64(0)
+		for _, value := range r.Keys {
+			sum += r.Ranks[value]
+		}
+		entropy := 0.0
+		for _, value := range r.Keys {
+			if r.Ranks[value] == 0 {
+				continue
+			}
+			p := float64(r.Ranks[value]) / float64(sum)
+			entropy += p * math.Log2(p)
+		}
+		fmt.Println(-entropy)
+		{
+			max := 0.0
+			for range r.List {
+				p := 1 / float64(len(r.List))
+				max += p * math.Log2(p)
+			}
+			fmt.Println("max", -max)
+			sum := uint64(0)
+			for _, value := range r.List {
+				sum += r.Ranks[value]
+			}
+			entropy := 0.0
+			for _, value := range r.List {
+				if r.Ranks[value] == 0 {
+					continue
+				}
+				p := float64(r.Ranks[value]) / float64(sum)
+				entropy += p * math.Log2(p)
+			}
+			fmt.Println(-entropy)
+		}
+		{
+			sum := uint64(0)
+			for _, value := range r.List {
+				sum += r.Ranks[value]
+			}
+			result = float64(sum) / float64(len(r.List))
+			fmt.Println(result)
+		}
+		{
+			sum := uint64(0)
+			for _, value := range words {
+				sum += gB.Ranks[value]
+			}
+			fmt.Println(float64(sum) / float64(len(words)))
+		}
+		return result
+	}
+	rB := process(gB)
+	rC := process(gC)
+	if g.Books[g.Text].Real {
+		if rB < rC {
+			fmt.Println("correct real", rB, rC)
+		} else {
+			fmt.Println("incorrect real", rB, rC)
+		}
+	} else {
+		if rB > rC {
+			fmt.Println("correct fake", rB, rC)
+		} else {
+			fmt.Println("incorrect fake", rB, rC)
+		}
+	}
+}
+
+// GraphMode is a graphical model
+func GraphMode(books []Book, t int, alt string) GraphResults {
+	text := string(books[t].Text)
+	words := strings.Fields(text)
+	doneA := make(chan Graph, 8)
+	go func() {
+		rng := rand.New(rand.NewSource(1))
+		g := NewGraph()
+		g.Learn(8*1024*1024, rng, words)
+		doneA <- g
+	}()
+
+	doneB := make(chan Result, 8)
+	go func() {
+		rng := rand.New(rand.NewSource(1))
 		suffix := strings.Fields(samples[0][:1024])
 		cp := make([]string, len(words))
 		copy(cp, words)
@@ -664,56 +767,14 @@ func GraphMode(text, alt string) {
 		words := append(cp, suffix...)
 		g := NewGraph()
 		g.Learn(8*1024*1024, rng, words)
-		sum := uint64(0)
-		for _, value := range g.Keys {
-			sum += g.Ranks[value]
+		doneB <- Result{
+			Graph: g,
+			List:  list,
 		}
-		entropy := 0.0
-		for _, value := range g.Keys {
-			if g.Ranks[value] == 0 {
-				continue
-			}
-			p := float64(g.Ranks[value]) / float64(sum)
-			entropy += p * math.Log2(p)
-		}
-		fmt.Println(-entropy)
-		{
-			max := 0.0
-			for range list {
-				p := 1 / float64(len(list))
-				max += p * math.Log2(p)
-			}
-			fmt.Println("max", -max)
-			sum := uint64(0)
-			for _, value := range list {
-				sum += g.Ranks[value]
-			}
-			entropy := 0.0
-			for _, value := range list {
-				if g.Ranks[value] == 0 {
-					continue
-				}
-				p := float64(g.Ranks[value]) / float64(sum)
-				entropy += p * math.Log2(p)
-			}
-			fmt.Println(-entropy)
-		}
-		{
-			sum := uint64(0)
-			for _, value := range list {
-				sum += g.Ranks[value]
-			}
-			fmt.Println(float64(sum) / float64(len(list)))
-		}
-		{
-			sum := uint64(0)
-			for _, value := range words {
-				sum += g.Ranks[value]
-			}
-			fmt.Println(float64(sum) / float64(len(words)))
-		}
-	}
-	{
+	}()
+	doneC := make(chan Result, 8)
+	go func() {
+		rng := rand.New(rand.NewSource(1))
 		suffix := strings.Fields(alt)
 		cp := make([]string, len(words))
 		copy(cp, words)
@@ -727,54 +788,17 @@ func GraphMode(text, alt string) {
 		words := append(cp, suffix...)
 		g := NewGraph()
 		g.Learn(8*1024*1024, rng, words)
-		sum := uint64(0)
-		for _, value := range g.Keys {
-			sum += g.Ranks[value]
+		doneC <- Result{
+			Graph: g,
+			List:  list,
 		}
-		entropy := 0.0
-		for _, value := range g.Keys {
-			if g.Ranks[value] == 0 {
-				continue
-			}
-			p := float64(g.Ranks[value]) / float64(sum)
-			entropy += p * math.Log2(p)
-		}
-		fmt.Println(-entropy)
-		{
-			max := 0.0
-			for range list {
-				p := 1 / float64(len(list))
-				max += p * math.Log2(p)
-			}
-			fmt.Println("max", -max)
-			sum := uint64(0)
-			for _, value := range list {
-				sum += g.Ranks[value]
-			}
-			entropy := 0.0
-			for _, value := range list {
-				if g.Ranks[value] == 0 {
-					continue
-				}
-				p := float64(g.Ranks[value]) / float64(sum)
-				entropy += p * math.Log2(p)
-			}
-			fmt.Println(-entropy)
-		}
-		{
-			sum := uint64(0)
-			for _, value := range list {
-				sum += g.Ranks[value]
-			}
-			fmt.Println(float64(sum) / float64(len(list)))
-		}
-		{
-			sum := uint64(0)
-			for _, value := range words {
-				sum += g.Ranks[value]
-			}
-			fmt.Println(float64(sum) / float64(len(words)))
-		}
+	}()
+	return GraphResults{
+		A:     doneA,
+		B:     doneB,
+		C:     doneC,
+		Books: books,
+		Text:  t,
 	}
 }
 
@@ -911,14 +935,14 @@ var samples = []string{
 
 	if *FlagGraph {
 		books := LoadBooks()
-		fmt.Println("bible")
-		GraphMode(string(books[0].Text), string(books[1].Text[8*1024:9*1024]))
-		fmt.Println("gemma")
-		GraphMode(string(books[18].Text), string(books[1].Text[8*1024:9*1024]))
-		fmt.Println("gpt")
-		GraphMode(string(books[19].Text), string(books[1].Text[8*1024:9*1024]))
-		fmt.Println("llama")
-		GraphMode(string(books[20].Text), string(books[1].Text[8*1024:9*1024]))
+		g := GraphMode(books, 0, string(books[1].Text[8*1024:9*1024]))
+		g.Process()
+		g = GraphMode(books, 18, string(books[1].Text[8*1024:9*1024]))
+		g.Process()
+		g = GraphMode(books, 19, string(books[1].Text[8*1024:9*1024]))
+		g.Process()
+		g = GraphMode(books, 20, string(books[1].Text[8*1024:9*1024]))
+		g.Process()
 		return
 	}
 
