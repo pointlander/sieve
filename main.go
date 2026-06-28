@@ -424,6 +424,8 @@ var (
 	FlagPre = flag.Bool("pre", false, "pre-generate model")
 	// FlagCal calibrate
 	FlagCal = flag.Bool("cal", false, "calibrate")
+	// FlagTest test
+	FlagTest = flag.Int("test", -1, "test")
 )
 
 // NNMode is the nearest neighbor mode
@@ -968,6 +970,43 @@ func CalMode() {
 	fmt.Println(avg, stddev)
 }
 
+// TestMode test
+func TestMode() {
+	books := LoadBooks()
+	rng := rand.New(rand.NewSource(1))
+	text := string(books[0].Text)
+	words := strings.Fields(text)
+	{
+		suffix := strings.Fields(samples[*FlagTest][:1024])
+		cp := make([]string, len(words))
+		copy(cp, words)
+		has, list := make(map[string]bool), make([]string, 0, 8)
+		for _, word := range suffix {
+			if !has[word] {
+				has[word] = true
+				list = append(list, word)
+			}
+		}
+		words := append(cp, suffix...)
+		g := NewGraph()
+		g.Learn(8*1024*1024, rng, words)
+		{
+			sum := uint64(0)
+			for _, value := range list {
+				sum += g.Ranks[value]
+			}
+			result := float64(sum) / float64(len(list))
+			fmt.Println(result)
+			for i := 1; i < 4; i++ {
+				fmt.Println(i, Avg-float64(i)*Stddev)
+			}
+			if result < Avg {
+				fmt.Println("fake")
+			}
+		}
+	}
+}
+
 func main() {
 	flag.Parse()
 
@@ -1049,6 +1088,11 @@ var samples = []string{
 
 	if *FlagCal {
 		CalMode()
+		return
+	}
+
+	if *FlagTest >= 0 {
+		TestMode()
 		return
 	}
 
