@@ -997,6 +997,7 @@ func TestMode() {
 			}
 			result := float64(sum) / float64(len(list))
 			fmt.Println(result)
+			fmt.Println((1 + math.Erf((result-Avg)/(Stddev*math.Sqrt(2)))) / 2)
 			for i := 1; i < 4; i++ {
 				fmt.Println(i, Avg-float64(i)*Stddev)
 			}
