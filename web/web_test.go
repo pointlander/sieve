@@ -11,6 +11,7 @@ import (
 func TestSieve(t *testing.T) {
 	for i := range samples {
 		result := TestMode(samples[i][:1024])
+		t.Log(i, result)
 		if result > .1 {
 			t.Fatal("result should be less than .1")
 		}
