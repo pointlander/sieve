@@ -540,7 +540,7 @@ func (g *Graph) Learn(iterations int, rng *rand.Rand, words []string) {
 }
 
 // LearnFast adds context to a model
-func (g *Graph) LearnFast(delta float64, iterations int, rng *rand.Rand, words, list []string) float64 {
+func (g *Graph) LearnFast(delta float64, iterations int, rng *rand.Rand, words, list []string, size int) float64 {
 	for i, word := range words[:len(words)-1] {
 		{
 			node := g.Graph[word]
@@ -591,7 +591,7 @@ func (g *Graph) LearnFast(delta float64, iterations int, rng *rand.Rand, words, 
 			for _, word := range list {
 				current += float64(g.Ranks[word]) / count
 			}
-			current /= float64(len(list))
+			current /= float64(size)
 			if math.Abs(current-previous) < delta {
 				return count
 			}
@@ -953,8 +953,8 @@ func PreMode(text string) {
 const (
 	//Avg    = 22312.347726174572
 	//Stddev = 351.83476026650527
-	Avg    = 0.3267013423684971
-	Stddev = 0.002396015171546306
+	Avg    = 0.001873369023108459
+	Stddev = 2.017265642939458e-05
 )
 
 // CalMode calibrate
@@ -979,14 +979,14 @@ func CalMode() {
 		}
 		words := append(cp, suffix...)
 		g := NewGraph()
-		count := g.LearnFast(1e-5, 8*1024*1024, rng, words, list)
+		count := g.LearnFast(1e-5, 8*1024*1024, rng, words, list, len(suffix))
 		result := 0.0
 		{
-			sum := uint64(0)
+			sum := 0.0
 			for _, value := range list {
-				sum += g.Ranks[value]
+				sum += float64(g.Ranks[value]) / float64(count)
 			}
-			result = float64(sum) / count
+			result = float64(sum) / float64(len(suffix))
 			fmt.Println(result)
 		}
 		done <- result
@@ -1053,13 +1053,13 @@ func TestMode() {
 		}
 		words := append(cp, suffix...)
 		g := NewGraph()
-		count := g.LearnFast(1e-5, 8*1024*1024, rng, words, list)
+		count := g.LearnFast(1e-5, 8*1024*1024, rng, words, list, len(suffix))
 		{
-			sum := uint64(0)
+			sum := 0.0
 			for _, value := range list {
-				sum += g.Ranks[value]
+				sum += float64(g.Ranks[value]) / float64(count)
 			}
-			result := float64(sum) / count
+			result := float64(sum) / float64(len(suffix))
 			fmt.Printf("%.16f\n", result)
 			fmt.Println((1 + math.Erf((result-Avg)/(Stddev*math.Sqrt(2)))) / 2)
 			for i := 1; i < 4; i++ {
