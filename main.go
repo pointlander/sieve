@@ -539,6 +539,68 @@ func (g *Graph) Learn(iterations int, rng *rand.Rand, words []string) {
 	}
 }
 
+// LearnFast adds context to a model
+func (g *Graph) LearnFast(delta float64, iterations int, rng *rand.Rand, words, list []string) float64 {
+	for i, word := range words[:len(words)-1] {
+		{
+			node := g.Graph[word]
+			if node.Links == nil {
+				g.Keys = append(g.Keys, word)
+				node.Links = make(map[string]uint64)
+				node.Keys = make([]string, 0, 8)
+			}
+			count, ok := node.Links[words[i+1]]
+			if !ok {
+				node.Keys = append(node.Keys, words[i+1])
+			}
+			count++
+			node.Links[words[i+1]] = count
+			g.Graph[word] = node
+		}
+	}
+	word := words[0]
+	node := g.Graph[word]
+	previous := math.MaxFloat64
+	for i := range iterations {
+		g.Ranks[word]++
+		if rng.Float64() > .9 {
+			index := rng.Intn(len(words))
+			word = words[index]
+			node = g.Graph[word]
+		}
+		for len(node.Keys) == 0 {
+			index := rng.Intn(len(words))
+			word = words[index]
+			node = g.Graph[word]
+		}
+		sum := uint64(0)
+		for _, value := range node.Keys {
+			sum += node.Links[value]
+		}
+		total, selected := uint64(0), uint64(rng.Intn(int(sum)))
+		for _, value := range node.Keys {
+			total += node.Links[value]
+			if selected < total {
+				word = value
+				node = g.Graph[word]
+				break
+			}
+		}
+		if (i+1)%len(g.Graph) == 0 {
+			current, count := 0.0, float64(i)
+			for _, word := range list {
+				current += float64(g.Ranks[word]) / count
+			}
+			current /= float64(len(list))
+			if math.Abs(current-previous) < delta {
+				return count
+			}
+			previous = current
+		}
+	}
+	return -1
+}
+
 // Add adds context to a model
 func (g *Graph) Add(iterations int, rng *rand.Rand, words []string) {
 	sum, count := uint64(0), uint64(0)
@@ -889,8 +951,10 @@ func PreMode(text string) {
 }
 
 const (
-	Avg    = 22312.347726174572
-	Stddev = 351.83476026650527
+	//Avg    = 22312.347726174572
+	//Stddev = 351.83476026650527
+	Avg    = 0.3267013423684971
+	Stddev = 0.002396015171546306
 )
 
 // CalMode calibrate
@@ -915,14 +979,14 @@ func CalMode() {
 		}
 		words := append(cp, suffix...)
 		g := NewGraph()
-		g.Learn(8*1024*1024, rng, words)
+		count := g.LearnFast(1e-5, 8*1024*1024, rng, words, list)
 		result := 0.0
 		{
 			sum := uint64(0)
 			for _, value := range list {
 				sum += g.Ranks[value]
 			}
-			result = float64(sum) / float64(len(list))
+			result = float64(sum) / count
 			fmt.Println(result)
 		}
 		done <- result
@@ -989,17 +1053,17 @@ func TestMode() {
 		}
 		words := append(cp, suffix...)
 		g := NewGraph()
-		g.Learn(8*1024*1024, rng, words)
+		count := g.LearnFast(1e-5, 8*1024*1024, rng, words, list)
 		{
 			sum := uint64(0)
 			for _, value := range list {
 				sum += g.Ranks[value]
 			}
-			result := float64(sum) / float64(len(list))
-			fmt.Println(result)
+			result := float64(sum) / count
+			fmt.Printf("%.16f\n", result)
 			fmt.Println((1 + math.Erf((result-Avg)/(Stddev*math.Sqrt(2)))) / 2)
 			for i := 1; i < 4; i++ {
-				fmt.Println(i, Avg-float64(i)*Stddev)
+				fmt.Printf("%d %.16f\n", i, Avg-float64(i)*Stddev)
 			}
 			if result < Avg {
 				fmt.Println("fake")
