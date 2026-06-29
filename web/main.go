@@ -18,8 +18,8 @@ import (
 var Books embed.FS
 
 const (
-	Avg    = 0.001873369023108459
-	Stddev = 2.017265642939458e-05
+	Avg    = 0.002657625207559362
+	Stddev = 4.0680864464795154e-05
 )
 
 // Book is a book
@@ -160,12 +160,12 @@ func TestMode(sample string) float64 {
 		}
 		words := append(cp, suffix...)
 		g := NewGraph()
-		count := g.LearnFast(1e-5, 8*1024*1024, rng, words, list, len(suffix))
+		count := g.LearnFast(1e-5, 8*1024*1024, rng, words, list, len(list))
 		sum := 0.0
 		for _, value := range list {
 			sum += float64(g.Ranks[value]) / float64(count)
 		}
-		result := float64(sum) / float64(len(suffix))
+		result := float64(sum) / float64(len(list))
 		return (1 + math.Erf((result-Avg)/(Stddev*math.Sqrt(2)))) / 2
 	}
 }

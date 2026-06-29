@@ -953,8 +953,8 @@ func PreMode(text string) {
 const (
 	//Avg    = 22312.347726174572
 	//Stddev = 351.83476026650527
-	Avg    = 0.001873369023108459
-	Stddev = 2.017265642939458e-05
+	Avg    = 0.002657625207559362
+	Stddev = 4.0680864464795154e-05
 )
 
 // CalMode calibrate
@@ -979,14 +979,14 @@ func CalMode() {
 		}
 		words := append(cp, suffix...)
 		g := NewGraph()
-		count := g.LearnFast(1e-5, 8*1024*1024, rng, words, list, len(suffix))
+		count := g.LearnFast(1e-5, 8*1024*1024, rng, words, list, len(list))
 		result := 0.0
 		{
 			sum := 0.0
 			for _, value := range list {
 				sum += float64(g.Ranks[value]) / float64(count)
 			}
-			result = float64(sum) / float64(len(suffix))
+			result = float64(sum) / float64(len(list))
 			fmt.Println(result)
 		}
 		done <- result
@@ -1053,13 +1053,13 @@ func TestMode() {
 		}
 		words := append(cp, suffix...)
 		g := NewGraph()
-		count := g.LearnFast(1e-5, 8*1024*1024, rng, words, list, len(suffix))
+		count := g.LearnFast(1e-5, 8*1024*1024, rng, words, list, len(list))
 		{
 			sum := 0.0
 			for _, value := range list {
 				sum += float64(g.Ranks[value]) / float64(count)
 			}
-			result := float64(sum) / float64(len(suffix))
+			result := float64(sum) / float64(len(list))
 			fmt.Printf("%.16f\n", result)
 			fmt.Println((1 + math.Erf((result-Avg)/(Stddev*math.Sqrt(2)))) / 2)
 			for i := 1; i < 4; i++ {
