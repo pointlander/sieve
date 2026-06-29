@@ -7,7 +7,6 @@ package main
 import (
 	"compress/bzip2"
 	"embed"
-	"flag"
 	"fmt"
 	"io"
 	"math"
@@ -58,11 +57,6 @@ func LoadBooks() []Book {
 	}
 	return books
 }
-
-var (
-	// FlagTest test to run
-	FlagTest = flag.Int("test", -1, "test to run")
-)
 
 // Node is a node in a graph
 type Node struct {
@@ -148,13 +142,13 @@ func (g *Graph) LearnFast(delta float64, iterations int, rng *rand.Rand, words, 
 }
 
 // TestMode test
-func TestMode() {
+func TestMode(sample string) float64 {
 	books := LoadBooks()
 	rng := rand.New(rand.NewSource(1))
 	text := string(books[0].Text)
 	words := strings.Fields(text)
 	{
-		suffix := strings.Fields(samples[*FlagTest][:1024])
+		suffix := strings.Fields(sample)
 		cp := make([]string, len(words))
 		copy(cp, words)
 		has, list := make(map[string]bool), make([]string, 0, 8)
@@ -167,29 +161,15 @@ func TestMode() {
 		words := append(cp, suffix...)
 		g := NewGraph()
 		count := g.LearnFast(1e-5, 8*1024*1024, rng, words, list, len(suffix))
-		{
-			sum := 0.0
-			for _, value := range list {
-				sum += float64(g.Ranks[value]) / float64(count)
-			}
-			result := float64(sum) / float64(len(suffix))
-			fmt.Printf("%.16f\n", result)
-			fmt.Println((1 + math.Erf((result-Avg)/(Stddev*math.Sqrt(2)))) / 2)
-			for i := 1; i < 4; i++ {
-				fmt.Printf("%d %.16f\n", i, Avg-float64(i)*Stddev)
-			}
-			if result < Avg {
-				fmt.Println("fake")
-			}
+		sum := 0.0
+		for _, value := range list {
+			sum += float64(g.Ranks[value]) / float64(count)
 		}
+		result := float64(sum) / float64(len(suffix))
+		return (1 + math.Erf((result-Avg)/(Stddev*math.Sqrt(2)))) / 2
 	}
 }
 
 func main() {
-	flag.Parse()
 
-	if *FlagTest >= 0 {
-		TestMode()
-		return
-	}
 }
