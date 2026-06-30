@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+//go:build js && wasm
+
 package main
 
 import (
@@ -12,6 +14,7 @@ import (
 	"math"
 	"math/rand"
 	"strings"
+	"syscall/js"
 )
 
 //go:embed 10.txt.utf-8.bz2
@@ -170,6 +173,21 @@ func TestMode(sample string) float64 {
 	}
 }
 
-func main() {
+func processText(this js.Value, args []js.Value) any {
+	if len(args) > 0 {
+		input := args[0].String()
 
+		runes := []rune(input)
+		for i, j := 0, len(runes)-1; i < j; i, j = i+1, j-1 {
+			runes[i], runes[j] = runes[j], runes[i]
+		}
+
+		return string(runes)
+	}
+	return ""
+}
+
+func main() {
+	js.Global().Set("goProcessText", js.FuncOf(processText))
+	select {}
 }
