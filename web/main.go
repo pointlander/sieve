@@ -176,13 +176,13 @@ func TestMode(sample string) float64 {
 func processText(this js.Value, args []js.Value) any {
 	if len(args) > 0 {
 		input := args[0].String()
-
-		runes := []rune(input)
-		for i, j := 0, len(runes)-1; i < j; i, j = i+1, j-1 {
-			runes[i], runes[j] = runes[j], runes[i]
+		bytes := []byte(input)
+		if len(bytes) < 1024 {
+			return "number of bytes is less than 1024"
 		}
-
-		return string(runes)
+		bytes = bytes[:1024]
+		pReal := TestMode(string(bytes))
+		return fmt.Sprintf("%f probability real and %f probability AI", pReal, 1-pReal)
 	}
 	return ""
 }
