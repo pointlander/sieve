@@ -951,14 +951,13 @@ func PreMode(text string) {
 }
 
 const (
-	//Avg    = 22312.347726174572
-	//Stddev = 351.83476026650527
-	Avg    = 0.002657625207559362
-	Stddev = 4.0680864464795154e-05
+	Avg    = 0.0025888081781043977
+	Stddev = 5.307096038488393e-05
 )
 
 // CalMode calibrate
 func CalMode() {
+	const Samples = 64
 	books := LoadBooks()
 	rng := rand.New(rand.NewSource(1))
 	text := string(books[0].Text)
@@ -979,7 +978,7 @@ func CalMode() {
 		}
 		words := append(cp, suffix...)
 		g := NewGraph()
-		count := g.LearnFast(1e-5, 8*1024*1024, rng, words, list, len(list))
+		count := g.LearnFast(1e-6, 8*1024*1024, rng, words, list, len(list))
 		result := 0.0
 		{
 			sum := 0.0
@@ -992,7 +991,7 @@ func CalMode() {
 		done <- result
 	}
 	c, flight, cpus := 0, 0, runtime.NumCPU()
-	for c < 32 && flight < cpus {
+	for c < Samples && flight < cpus {
 		book := rng.Intn(18)
 		length := len(books[book].Text)
 		count := length/1024 - 1
@@ -1001,8 +1000,8 @@ func CalMode() {
 		c++
 		flight++
 	}
-	results := make([]float64, 0, 32)
-	for c < 32 {
+	results := make([]float64, 0, Samples)
+	for c < Samples {
 		result := <-done
 		results = append(results, result)
 		flight--

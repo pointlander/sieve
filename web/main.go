@@ -21,8 +21,8 @@ import (
 var Books embed.FS
 
 const (
-	Avg    = 0.002657625207559362
-	Stddev = 4.0680864464795154e-05
+	Avg    = 0.0025888081781043977
+	Stddev = 5.307096038488393e-05
 )
 
 // Book is a book
