@@ -183,139 +183,139 @@ const (
 
 // Rank is a text rank
 type Rank struct {
-	Rank float64
+	Rank [2]float64
 	Type Text
 }
 
 var Ranks = []Rank{
-	{0.0027188210448006, TextNot},
-	{0.0024715820022209, TextNot},
-	{0.0026193556997382, TextNot},
-	{0.0027671081299420, TextNot},
-	{0.0026994349599398, TextNot},
-	{0.0025840830287612, TextNot},
-	{0.0032537747798464, TextNot},
-	{0.0030260218133745, TextNot},
-	{0.0030208543655926, TextNot},
-	{0.0030199160180444, TextNot},
-	{0.0029726773896805, TextNot},
-	{0.0026546765932896, TextNot},
-	{0.0042592065200255, TextNot},
-	{0.0024739898736685, TextNot},
-	{0.0027594223439506, TextNot},
-	{0.0026971659298036, TextNot},
-	{0.0025918806265325, TextNot},
-	{0.0026751595676999, TextNot},
-	{0.0025289134565670, TextNot},
-	{0.0025590231275894, TextNot},
-	{0.0025814640050012, TextNot},
-	{0.0023368627091383, TextNot},
-	{0.0024870842928849, TextNot},
-	{0.0029075499031191, TextNot},
-	{0.0025487047367912, TextNot},
-	{0.0023944620415836, TextNot},
-	{0.0028243499031931, TextNot},
-	{0.0027792506686523, TextNot},
-	{0.0022983617071924, TextNot},
-	{0.0033354077537305, TextNot},
-	{0.0026267206446545, TextNot},
-	{0.0022798844561389, TextNot},
-	{0.0021906492701910, TextNot},
-	{0.0024939065349125, TextNot},
-	{0.0022579607558760, TextNot},
-	{0.0029258282744318, TextNot},
-	{0.0027802379613480, TextNot},
-	{0.0030600140400914, TextNot},
-	{0.0025397396367300, TextNot},
-	{0.0025992219533246, TextNot},
-	{0.0028060770270868, TextNot},
-	{0.0022546838432058, TextNot},
-	{0.0024367762075795, TextNot},
-	{0.0026651291875348, TextNot},
-	{0.0028795887644575, TextNot},
-	{0.0030133758611835, TextNot},
-	{0.0023960381190513, TextNot},
-	{0.0030995077704995, TextNot},
-	{0.0025965666477240, TextNot},
-	{0.0026769202985166, TextNot},
-	{0.0029379048771785, TextNot},
-	{0.0030094657475025, TextNot},
-	{0.0025344136713206, TextNot},
-	{0.0028319165180598, TextNot},
-	{0.0025604733845274, TextNot},
-	{0.0028865071627312, TextNot},
-	{0.0026622015240734, TextNot},
-	{0.0035105711405213, TextNot},
-	{0.0027806458982686, TextNot},
-	{0.0027587114059970, TextNot},
-	{0.0026219374546689, TextNot},
-	{0.0027395088538209, TextNot},
-	{0.0027085489113351, TextNot},
-	{0.0027325167866255, TextNot},
-	{0.0024445933956482, TextSlop},
-	{0.0015424269288494, TextSlop},
-	{0.0025149471576455, TextSlop},
-	{0.0024220115114023, TextSlop},
-	{0.0023339019148041, TextSlop},
-	{0.0017118832908543, TextSlop},
-	{0.0026346499019590, TextSlop},
-	{0.0023131888268327, TextSlop},
-	{0.0019824144576281, TextSlop},
-	{0.0020004694725476, TextSlop},
-	{0.0024191015400646, TextSlop},
-	{0.0024318700824397, TextSlop},
-	{0.0025487131930542, TextSlop},
-	{0.0024489039635493, TextSlop},
-	{0.0026200062738841, TextSlop},
-	{0.0021308244593731, TextSlop},
-	{0.0025408850862659, TextSlop},
-	{0.0023466259895508, TextSlop},
-	{0.0027722206828839, TextSlop},
-	{0.0026262351013152, TextSlop},
-	{0.0020511025331169, TextSlop},
-	{0.0025411085842163, TextSlop},
-	{0.0025550910644093, TextSlop},
-	{0.0023265712402190, TextSlop},
-	{0.0022505472938499, TextSlop},
-	{0.0015494579987679, TextSlop},
-	{0.0024414392046835, TextSlop},
-	{0.0023367264173967, TextSlop},
-	{0.0024874132527845, TextSlop},
-	{0.0025623734728518, TextSlop},
-	{0.0024054167664316, TextSlop},
-	{0.0022563102793485, TextSlop},
-	{0.0025699314925276, TextSlop},
-	{0.0022083485785579, TextSlop},
-	{0.0024047174992061, TextSlop},
-	{0.0021898323460208, TextSlop},
-	{0.0024831399177127, TextSlop},
-	{0.0022166256740873, TextSlop},
-	{0.0024844674078830, TextSlop},
-	{0.0021142262108663, TextSlop},
-	{0.0019836141218865, TextSlop},
-	{0.0024520837641847, TextSlop},
-	{0.0023170101015378, TextSlop},
-	{0.0024531369435419, TextSlop},
-	{0.0024855228483818, TextSlop},
-	{0.0021475658591521, TextSlop},
-	{0.0026414136916751, TextSlop},
-	{0.0021671147561427, TextSlop},
-	{0.0022909557569519, TextSlop},
-	{0.0020329115799536, TextSlop},
-	{0.0029593567459492, TextSlop},
-	{0.0026884490230808, TextSlop},
-	{0.0024110046547876, TextSlop},
-	{0.0024822767049441, TextSlop},
-	{0.0022355475692285, TextSlop},
-	{0.0025201338997538, TextSlop},
-	{0.0022753110504954, TextSlop},
-	{0.0021692623494004, TextSlop},
-	{0.0018238113597638, TextSlop},
-	{0.0021154275181101, TextSlop},
-	{0.0017224302827641, TextSlop},
-	{0.0024141895208603, TextSlop},
-	{0.0018532019733349, TextSlop},
-	{0.0025454933226278, TextSlop},
+	{[2]float64{0.0027188210448006, 0.0021707177135268}, TextNot},
+	{[2]float64{0.0024715820022209, 0.0022843656070799}, TextNot},
+	{[2]float64{0.0027671081299420, 0.0023964612455301}, TextNot},
+	{[2]float64{0.0026193556997382, 0.0021191478071765}, TextNot},
+	{[2]float64{0.0032537747798464, 0.0022569680064573}, TextNot},
+	{[2]float64{0.0025840830287612, 0.0022436937998044}, TextNot},
+	{[2]float64{0.0030199160180444, 0.0025708445147745}, TextNot},
+	{[2]float64{0.0030208543655926, 0.0026152698951034}, TextNot},
+	{[2]float64{0.0026994349599398, 0.0022076699527420}, TextNot},
+	{[2]float64{0.0030260218133745, 0.0025658719290011}, TextNot},
+	{[2]float64{0.0027594223439506, 0.0021298467539631}, TextNot},
+	{[2]float64{0.0024739898736685, 0.0023793495891937}, TextNot},
+	{[2]float64{0.0029726773896805, 0.0026090682614000}, TextNot},
+	{[2]float64{0.0042592065200255, 0.0030658209062800}, TextNot},
+	{[2]float64{0.0026546765932896, 0.0021784202039178}, TextNot},
+	{[2]float64{0.0025918806265325, 0.0023566801635863}, TextNot},
+	{[2]float64{0.0026971659298036, 0.0022283595796568}, TextNot},
+	{[2]float64{0.0025590231275894, 0.0024211534646999}, TextNot},
+	{[2]float64{0.0026751595676999, 0.0020610967936296}, TextNot},
+	{[2]float64{0.0025289134565670, 0.0024787705252416}, TextNot},
+	{[2]float64{0.0023368627091383, 0.0018932748412559}, TextNot},
+	{[2]float64{0.0024870842928849, 0.0024176143717155}, TextNot},
+	{[2]float64{0.0025814640050012, 0.0022536222561623}, TextNot},
+	{[2]float64{0.0028243499031931, 0.0024085641545411}, TextNot},
+	{[2]float64{0.0029075499031191, 0.0023319154135278}, TextNot},
+	{[2]float64{0.0025487047367912, 0.0020746365999183}, TextNot},
+	{[2]float64{0.0022983617071924, 0.0020691707063021}, TextNot},
+	{[2]float64{0.0027792506686523, 0.0022741979528189}, TextNot},
+	{[2]float64{0.0023944620415836, 0.0020980970592896}, TextNot},
+	{[2]float64{0.0022579607558760, 0.0026524501110297}, TextNot},
+	{[2]float64{0.0033354077537305, 0.0024943948065777}, TextNot},
+	{[2]float64{0.0026267206446545, 0.0022779221093241}, TextNot},
+	{[2]float64{0.0021906492701910, 0.0018664165974540}, TextNot},
+	{[2]float64{0.0024939065349125, 0.0021234736726677}, TextNot},
+	{[2]float64{0.0022798844561389, 0.0019426968391971}, TextNot},
+	{[2]float64{0.0030600140400914, 0.0032287975459727}, TextNot},
+	{[2]float64{0.0029258282744318, 0.0024894356274089}, TextNot},
+	{[2]float64{0.0028060770270868, 0.0023128213538140}, TextNot},
+	{[2]float64{0.0025397396367300, 0.0022325897122978}, TextNot},
+	{[2]float64{0.0025992219533246, 0.0022279109831160}, TextNot},
+	{[2]float64{0.0027802379613480, 0.0023351546670216}, TextNot},
+	{[2]float64{0.0022546838432058, 0.0023215665772443}, TextNot},
+	{[2]float64{0.0030133758611835, 0.0026073213972252}, TextNot},
+	{[2]float64{0.0024367762075795, 0.0021641497698719}, TextNot},
+	{[2]float64{0.0026651291875348, 0.0024166674588935}, TextNot},
+	{[2]float64{0.0030995077704995, 0.0024482251131621}, TextNot},
+	{[2]float64{0.0023960381190513, 0.0019835105408201}, TextNot},
+	{[2]float64{0.0025965666477240, 0.0021773752708994}, TextNot},
+	{[2]float64{0.0026769202985166, 0.0025215607345782}, TextNot},
+	{[2]float64{0.0029379048771785, 0.0023425463694939}, TextNot},
+	{[2]float64{0.0028795887644575, 0.0025370055632383}, TextNot},
+	{[2]float64{0.0030094657475025, 0.0027909382211062}, TextNot},
+	{[2]float64{0.0025344136713206, 0.0021558403024649}, TextNot},
+	{[2]float64{0.0026219374546689, 0.0021517113313310}, TextNot},
+	{[2]float64{0.0028865071627312, 0.0025492552184272}, TextNot},
+	{[2]float64{0.0025604733845274, 0.0022736778704723}, TextNot},
+	{[2]float64{0.0028319165180598, 0.0025514659201326}, TextNot},
+	{[2]float64{0.0026622015240734, 0.0021657275843487}, TextNot},
+	{[2]float64{0.0035105711405213, 0.0023411923361343}, TextNot},
+	{[2]float64{0.0027806458982686, 0.0025126437639720}, TextNot},
+	{[2]float64{0.0027587114059970, 0.0024436857058114}, TextNot},
+	{[2]float64{0.0027085489113351, 0.0022838944749878}, TextNot},
+	{[2]float64{0.0027395088538209, 0.0022410249216797}, TextNot},
+	{[2]float64{0.0027325167866255, 0.0024290516533453}, TextNot},
+	{[2]float64{0.0025149471576455, 0.0024180855017632}, TextSlop},
+	{[2]float64{0.0024445933956482, 0.0024937129839479}, TextSlop},
+	{[2]float64{0.0023339019148041, 0.0024091981326603}, TextSlop},
+	{[2]float64{0.0024220115114023, 0.0024734012048123}, TextSlop},
+	{[2]float64{0.0026346499019590, 0.0027190505596740}, TextSlop},
+	{[2]float64{0.0017118832908543, 0.0020221873790233}, TextSlop},
+	{[2]float64{0.0019824144576281, 0.0019871751676600}, TextSlop},
+	{[2]float64{0.0015424269288494, 0.0019297543163752}, TextSlop},
+	{[2]float64{0.0020004694725476, 0.0022205196071603}, TextSlop},
+	{[2]float64{0.0023131888268327, 0.0024205198865430}, TextSlop},
+	{[2]float64{0.0024191015400646, 0.0023294245100570}, TextSlop},
+	{[2]float64{0.0024489039635493, 0.0024009054204522}, TextSlop},
+	{[2]float64{0.0024318700824397, 0.0025913612141239}, TextSlop},
+	{[2]float64{0.0021308244593731, 0.0023762324464568}, TextSlop},
+	{[2]float64{0.0026200062738841, 0.0028136367008170}, TextSlop},
+	{[2]float64{0.0025487131930542, 0.0026058196577575}, TextSlop},
+	{[2]float64{0.0025411085842163, 0.0026570683085240}, TextSlop},
+	{[2]float64{0.0027722206828839, 0.0029362074069110}, TextSlop},
+	{[2]float64{0.0025408850862659, 0.0025782601573532}, TextSlop},
+	{[2]float64{0.0026262351013152, 0.0028439701041294}, TextSlop},
+	{[2]float64{0.0023466259895508, 0.0024142207744834}, TextSlop},
+	{[2]float64{0.0023265712402190, 0.0025738195853859}, TextSlop},
+	{[2]float64{0.0020511025331169, 0.0024751187759248}, TextSlop},
+	{[2]float64{0.0022505472938499, 0.0024848456272955}, TextSlop},
+	{[2]float64{0.0023367264173967, 0.0025625272925423}, TextSlop},
+	{[2]float64{0.0024414392046835, 0.0025781801901391}, TextSlop},
+	{[2]float64{0.0025550910644093, 0.0027009314865210}, TextSlop},
+	{[2]float64{0.0024054167664316, 0.0024654532541205}, TextSlop},
+	{[2]float64{0.0015494579987679, 0.0020116032119858}, TextSlop},
+	{[2]float64{0.0022083485785579, 0.0021456996779022}, TextSlop},
+	{[2]float64{0.0025623734728518, 0.0026475525531631}, TextSlop},
+	{[2]float64{0.0022563102793485, 0.0023468475209205}, TextSlop},
+	{[2]float64{0.0024874132527845, 0.0023535562688416}, TextSlop},
+	{[2]float64{0.0024047174992061, 0.0025192893013401}, TextSlop},
+	{[2]float64{0.0025699314925276, 0.0026921091495425}, TextSlop},
+	{[2]float64{0.0024844674078830, 0.0024600745234944}, TextSlop},
+	{[2]float64{0.0024831399177127, 0.0025620861030160}, TextSlop},
+	{[2]float64{0.0021898323460208, 0.0024379108415762}, TextSlop},
+	{[2]float64{0.0021142262108663, 0.0022580771184123}, TextSlop},
+	{[2]float64{0.0019836141218865, 0.0022558896961813}, TextSlop},
+	{[2]float64{0.0023170101015378, 0.0022806461830852}, TextSlop},
+	{[2]float64{0.0022166256740873, 0.0023195168969092}, TextSlop},
+	{[2]float64{0.0026414136916751, 0.0027393168390889}, TextSlop},
+	{[2]float64{0.0024520837641847, 0.0024813832485300}, TextSlop},
+	{[2]float64{0.0024531369435419, 0.0026076107217002}, TextSlop},
+	{[2]float64{0.0022909557569519, 0.0022879198848630}, TextSlop},
+	{[2]float64{0.0024855228483818, 0.0025300244613007}, TextSlop},
+	{[2]float64{0.0021671147561427, 0.0024029837028294}, TextSlop},
+	{[2]float64{0.0020329115799536, 0.0019898823108718}, TextSlop},
+	{[2]float64{0.0021475658591521, 0.0021566988284742}, TextSlop},
+	{[2]float64{0.0026884490230808, 0.0028583502464631}, TextSlop},
+	{[2]float64{0.0025201338997538, 0.0028413143359485}, TextSlop},
+	{[2]float64{0.0024110046547876, 0.0025791073744682}, TextSlop},
+	{[2]float64{0.0022355475692285, 0.0024845382145101}, TextSlop},
+	{[2]float64{0.0029593567459492, 0.0029612084025578}, TextSlop},
+	{[2]float64{0.0024822767049441, 0.0026270851279060}, TextSlop},
+	{[2]float64{0.0018238113597638, 0.0020914255523993}, TextSlop},
+	{[2]float64{0.0021154275181101, 0.0022610911266189}, TextSlop},
+	{[2]float64{0.0022753110504954, 0.0025180764112618}, TextSlop},
+	{[2]float64{0.0021692623494004, 0.0022429177526345}, TextSlop},
+	{[2]float64{0.0024141895208603, 0.0025486852722917}, TextSlop},
+	{[2]float64{0.0025454933226278, 0.0026603229520664}, TextSlop},
+	{[2]float64{0.0017224302827641, 0.0021212288055982}, TextSlop},
+	{[2]float64{0.0018532019733349, 0.0022807511625862}, TextSlop},
 }
 
 // Prompt is a llm prompt
@@ -1109,8 +1109,9 @@ func CalMode() {
 	rng := rand.New(rand.NewSource(1))
 	text := string(books[0].Text)
 	words := strings.Fields(text)
+	words2 := strings.Fields(string(books[21].Text))
 
-	done := make(chan float64, 8)
+	done := make(chan [2]float64, 8)
 	cal := func(t string, seed int64, alt string) {
 		rng := rand.New(rand.NewSource(1))
 		suffix := strings.Fields(alt)
@@ -1133,9 +1134,32 @@ func CalMode() {
 				sum += float64(g.Ranks[value]) / float64(count)
 			}
 			result = float64(sum) / float64(len(list))
-			fmt.Printf("{%.16f, %s},\n", result, t)
 		}
-		done <- result
+		result2 := 0.0
+		{
+			suffix := strings.Fields(alt)
+			cp := make([]string, len(words2))
+			copy(cp, words2)
+			has, list := make(map[string]bool), make([]string, 0, 8)
+			for _, word := range suffix {
+				if !has[word] {
+					has[word] = true
+					list = append(list, word)
+				}
+			}
+			words := append(cp, suffix...)
+			g := NewGraph()
+			count := g.LearnFast(1e-6, 8*1024*1024, rng, words, list, len(list))
+			{
+				sum := 0.0
+				for _, value := range list {
+					sum += float64(g.Ranks[value]) / float64(count)
+				}
+				result2 = float64(sum) / float64(len(list))
+			}
+		}
+		fmt.Printf("{[2]float64{%.16f, %.16f}, %s},\n", result, result2, t)
+		done <- [2]float64{result, result2}
 	}
 	c, flight, cpus := 0, 0, runtime.NumCPU()
 	for c < Samples && flight < cpus {
@@ -1147,7 +1171,7 @@ func CalMode() {
 		c++
 		flight++
 	}
-	results := make([]float64, 0, Samples)
+	results := make([][2]float64, 0, Samples)
 	for c < Samples {
 		result := <-done
 		results = append(results, result)
@@ -1177,7 +1201,7 @@ func CalMode() {
 			c++
 			flight++
 		}
-		results := make([]float64, 0, Samples)
+		results := make([][2]float64, 0, Samples)
 		for c < Samples {
 			result := <-done
 			results = append(results, result)
@@ -1196,32 +1220,36 @@ func CalMode() {
 			results = append(results, result)
 		}
 
+		for i := range 2 {
+			sum := 0.0
+			for _, value := range results {
+				sum += value[i]
+			}
+			avg := sum / float64(len(results))
+			stddev := 0.0
+			for _, value := range results {
+				diff := value[i] - avg
+				stddev = diff * diff
+			}
+			stddev = math.Sqrt(stddev / float64(len(results)))
+			fmt.Println("slop", avg, stddev)
+		}
+	}
+
+	for i := range 2 {
 		sum := 0.0
 		for _, value := range results {
-			sum += value
+			sum += value[i]
 		}
 		avg := sum / float64(len(results))
 		stddev := 0.0
 		for _, value := range results {
-			diff := value - avg
+			diff := value[i] - avg
 			stddev = diff * diff
 		}
 		stddev = math.Sqrt(stddev / float64(len(results)))
-		fmt.Println("slop", avg, stddev)
+		fmt.Println("not", avg, stddev)
 	}
-
-	sum := 0.0
-	for _, value := range results {
-		sum += value
-	}
-	avg := sum / float64(len(results))
-	stddev := 0.0
-	for _, value := range results {
-		diff := value - avg
-		stddev = diff * diff
-	}
-	stddev = math.Sqrt(stddev / float64(len(results)))
-	fmt.Println("not", avg, stddev)
 }
 
 // TestMode test
@@ -1230,6 +1258,7 @@ func TestMode() {
 	rng := rand.New(rand.NewSource(1))
 	text := string(books[0].Text)
 	words := strings.Fields(text)
+	words2 := strings.Fields(string(books[21].Text))
 	{
 		suffix := strings.Fields(samples[*FlagTest][:1024])
 		cp := make([]string, len(words))
@@ -1244,22 +1273,45 @@ func TestMode() {
 		words := append(cp, suffix...)
 		g := NewGraph()
 		count := g.LearnFast(1e-5, 8*1024*1024, rng, words, list, len(list))
+		var count2 float64
+		g2 := NewGraph()
+		list2 := make([]string, 0, 8)
+		{
+			suffix := strings.Fields(samples[*FlagTest][:1024])
+			cp := make([]string, len(words2))
+			copy(cp, words2)
+			has := make(map[string]bool)
+			for _, word := range suffix {
+				if !has[word] {
+					has[word] = true
+					list2 = append(list2, word)
+				}
+			}
+			words := append(cp, suffix...)
+			count2 = g2.LearnFast(1e-5, 8*1024*1024, rng, words, list2, len(list2))
+		}
 		{
 			sum := 0.0
 			for _, value := range list {
 				sum += float64(g.Ranks[value]) / float64(count)
 			}
+			sum2 := 0.0
+			for _, value := range list2 {
+				sum2 += float64(g2.Ranks[value]) / float64(count2)
+			}
 			result := float64(sum) / float64(len(list))
+			result2 := float64(sum2) / float64(len(list2))
 			type Result struct {
 				Rank
 				Diff float64
 			}
 			results := make([]Result, 0, len(Ranks))
 			for _, rank := range Ranks {
-				diff := math.Abs(rank.Rank - result)
+				diff := rank.Rank[0] - result
+				diff2 := rank.Rank[1] - result2
 				results = append(results, Result{
 					Rank: rank,
-					Diff: diff,
+					Diff: diff*diff + diff2*diff2,
 				})
 			}
 			sort.Slice(results, func(i, j int) bool {
