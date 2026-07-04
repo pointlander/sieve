@@ -21,6 +21,8 @@ import (
 	"runtime"
 	"sort"
 	"strings"
+
+	"github.com/pointlander/gradient"
 )
 
 //go:embed books/*
@@ -1254,8 +1256,51 @@ func CalMode() {
 
 // TestMode test
 func TestMode() {
-	books := LoadBooks()
 	rng := rand.New(rand.NewSource(1))
+
+	context := gradient.Context[float64]{}
+	set := context.NewSet()
+	set.Add("w0", 2, 8)
+	set.AddBias("b0", 8)
+	set.Add("w1", 16, 1)
+	set.AddBias("b1", 1)
+	set.AddData("inputs", 2, len(Ranks))
+	set.AddData("outputs", 1, len(Ranks))
+	set.InitAdam(rng)
+
+	inputs := set.ByName["inputs"]
+	outputs := set.ByName["outputs"]
+	for i, rank := range Ranks {
+		for ii := range rank.Rank {
+			inputs.X[2*i+ii] = rank.Rank[ii]
+		}
+		if rank.Type == TextNot {
+			outputs.X[i] = 0.0
+		} else {
+			outputs.X[i] = 1.0
+		}
+	}
+	fmt.Println("length x", len(inputs.X))
+
+	Add := context.B(context.Add)
+	Mul := context.B(context.Mul)
+	Everett := context.U(context.Everett)
+	Sigmoid := context.U(context.Sigmoid)
+	Quadratic := context.B(context.Quadratic)
+	Avg := context.U(context.Avg)
+
+	l0 := Everett(Add(Mul(set.Get("w0"), set.Get("inputs")), set.Get("b0")))
+	l1 := Sigmoid(Add(Mul(set.Get("w1"), l0), set.Get("b1")))
+	loss := Avg(Quadratic(l1, set.Get("outputs")))
+
+	for range 8 * 1024 {
+		set.Zero()
+		l := gradient.Gradient(loss)
+		set.Adam(gradient.B1, gradient.B2, .01)
+		fmt.Println(l.X[0])
+	}
+
+	books := LoadBooks()
 	text := string(books[0].Text)
 	words := strings.Fields(text)
 	words2 := strings.Fields(string(books[21].Text))
