@@ -1280,20 +1280,19 @@ func TestMode() {
 			outputs.X[i] = 1.0
 		}
 	}
-	fmt.Println("length x", len(inputs.X))
 
 	Add := context.B(context.Add)
 	Mul := context.B(context.Mul)
 	Everett := context.U(context.Everett)
-	Sigmoid := context.U(context.Sigmoid)
+	//Sigmoid := context.U(context.Sigmoid)
 	Quadratic := context.B(context.Quadratic)
 	Avg := context.U(context.Avg)
 
 	l0 := Everett(Add(Mul(set.Get("w0"), set.Get("inputs")), set.Get("b0")))
-	l1 := Sigmoid(Add(Mul(set.Get("w1"), l0), set.Get("b1")))
+	l1 := Add(Mul(set.Get("w1"), l0), set.Get("b1"))
 	loss := Avg(Quadratic(l1, set.Get("outputs")))
 
-	for range 8 * 1024 {
+	for range 16 * 1024 {
 		set.Zero()
 		l := gradient.Gradient(loss)
 		set.Adam(gradient.B1, gradient.B2, .01)
@@ -1346,6 +1345,33 @@ func TestMode() {
 			}
 			result := float64(sum) / float64(len(list))
 			result2 := float64(sum2) / float64(len(list2))
+			{
+				context := gradient.Context[float64]{}
+				set := context.NewSet()
+				set.Add("w0", 2, 8)
+				set.AddBias("b0", 8)
+				set.Add("w1", 16, 1)
+				set.AddBias("b1", 1)
+				set.AddData("inputs", 2)
+				set.AddData("outputs", 1)
+				set.InitAdam(rng)
+
+				inputs := set.ByName["inputs"]
+				inputs.X[0] = result
+				inputs.X[1] = result2
+
+				Add := context.B(context.Add)
+				Mul := context.B(context.Mul)
+				Everett := context.U(context.Everett)
+				//Sigmoid := context.U(context.Sigmoid)
+
+				l0 := Everett(Add(Mul(set.Get("w0"), set.Get("inputs")), set.Get("b0")))
+				l1 := Add(Mul(set.Get("w1"), l0), set.Get("b1"))
+				l1(func(a *gradient.V[float64]) bool {
+					fmt.Println("l1", a.X[0])
+					return true
+				})
+			}
 			type Result struct {
 				Rank
 				Diff float64
