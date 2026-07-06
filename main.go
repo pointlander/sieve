@@ -1523,10 +1523,11 @@ func TestMode() {
 	set := context.NewSet()
 	set.Add("w0", 2, 8)
 	set.AddBias("b0", 8)
-	set.Add("w1", 16, 1)
-	set.AddBias("b1", 1)
+	set.Add("w1", 16, 2)
+	set.AddBias("b1", 2)
 	set.AddData("inputs", 2, len(Ranks))
-	set.AddData("outputs", 1, len(Ranks))
+	set.AddData("in", 2)
+	set.AddData("outputs", 2, len(Ranks))
 	set.InitAdam(rng)
 
 	inputs := set.ByName["inputs"]
@@ -1535,10 +1536,13 @@ func TestMode() {
 		for ii := range rank.Rank {
 			inputs.X[2*i+ii] = rank.Rank[ii]
 		}
-		if rank.Type == TextNot {
-			outputs.X[i] = 0.0
+		if rank.Type == TextSlop {
+			outputs.X[2*i+0] = 1.0
+			outputs.X[2*i+1] = 0.0
 		} else {
-			outputs.X[i] = 1.0
+
+			outputs.X[2*i+0] = 0.0
+			outputs.X[2*i+1] = 1.0
 		}
 	}
 
@@ -1607,17 +1611,7 @@ func TestMode() {
 			result := float64(sum) / float64(len(list))
 			result2 := float64(sum2) / float64(len(list2))
 			{
-				context := gradient.Context[float64]{}
-				set := context.NewSet()
-				set.Add("w0", 2, 8)
-				set.AddBias("b0", 8)
-				set.Add("w1", 16, 1)
-				set.AddBias("b1", 1)
-				set.AddData("inputs", 2)
-				set.AddData("outputs", 1)
-				set.InitAdam(rng)
-
-				inputs := set.ByName["inputs"]
+				inputs := set.ByName["in"]
 				inputs.X[0] = result
 				inputs.X[1] = result2
 
@@ -1626,10 +1620,10 @@ func TestMode() {
 				Everett := context.U(context.Everett)
 				//Sigmoid := context.U(context.Sigmoid)
 
-				l0 := Everett(Add(Mul(set.Get("w0"), set.Get("inputs")), set.Get("b0")))
+				l0 := Everett(Add(Mul(set.Get("w0"), set.Get("in")), set.Get("b0")))
 				l1 := Add(Mul(set.Get("w1"), l0), set.Get("b1"))
 				l1(func(a *gradient.V[float64]) bool {
-					fmt.Println("l1", a.X[0])
+					fmt.Println("l1", a.X[0], a.X[1])
 					return true
 				})
 			}
