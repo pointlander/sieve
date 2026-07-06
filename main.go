@@ -1639,7 +1639,7 @@ func TestMode() {
 			}
 			results := make([]Result, 0, len(Ranks))
 			for _, rank := range Ranks {
-				diff := rank.Rank[0] - result
+				diff := math.Abs(rank.Rank[0] - result)
 				//diff2 := rank.Rank[1] - result2
 				results = append(results, Result{
 					Rank: rank,
@@ -1657,7 +1657,7 @@ func TestMode() {
 			{
 				results := make([]Result, 0, len(Ranks))
 				for _, rank := range Ranks {
-					diff := rank.Rank[1] - result2
+					diff := math.Abs(rank.Rank[1] - result2)
 					results = append(results, Result{
 						Rank: rank,
 						Diff: diff,
@@ -1673,7 +1673,7 @@ func TestMode() {
 				fmt.Println(histogram)
 			}
 
-			fmt.Printf("%.16f\n", result)
+			fmt.Printf("result=%.16f result2=%.16f\n", result, result2)
 			fmt.Println((1+math.Erf((result-SlopAvg)/(SlopStddev*math.Sqrt(2))))/2,
 				(1+math.Erf((result-NotAvg)/(NotStddev*math.Sqrt(2))))/2)
 			for i := 1; i < 4; i++ {
