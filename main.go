@@ -1248,6 +1248,30 @@ func CalMode() {
 	}
 }
 
+// Class is a model for a class
+type Class struct {
+	Graph
+	Total float64
+}
+
+// Classes is a set of classes
+type Classes []Class
+
+// Score is the score function
+func (c Classes) Score(a int, data []string) float64 {
+	sum := 0.0
+	for i := range c {
+		sum += c[i].Total
+	}
+	p := math.Log(float64(c[a].Total+1) / (sum + float64(len(c))))
+	length := float64(len(data))
+	for _, symbol := range data {
+		p += math.Log(float64(c[a].Ranks[symbol]+1) / (float64(c[a].Total) + float64(len(c[a].Ranks))))
+
+	}
+	return p / length
+}
+
 // TestMode test
 func TestMode() {
 	rng := rand.New(rand.NewSource(1))
@@ -1327,6 +1351,12 @@ func TestMode() {
 		result[i] = float64(sum) / float64(len(list[i]))
 	}
 
+	classes := make(Classes, BookCount)
+	for i := range classes {
+		classes[i].Graph = g[i]
+		classes[i].Total = count[i]
+	}
+
 	for i, result := range result {
 		fmt.Printf("result%d=%.16f\n", i, result)
 		type Result struct {
@@ -1349,6 +1379,9 @@ func TestMode() {
 			histogram[results[i].Type]++
 		}
 		fmt.Println(histogram)
+
+		score := classes.Score(i, list[i])
+		fmt.Println("score", score)
 	}
 
 	{
