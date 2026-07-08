@@ -14,17 +14,9 @@
         function handleSubmit(event) {
             event.preventDefault();
             const inputText = document.getElementById("inputArea").value;
-            var process = true;
-            var index = 0;
             document.getElementById("outputArea").value = "";
-            while (process) {
-            	const result = goProcessText(index, inputText);
-            	document.getElementById("outputArea").value += result;
-            	if (result.length == 0) {
-            		process = false;
-            	}
-            	index++;
-            }
+            const result = goProcessText(inputText);
+            document.getElementById("outputArea").value = result;
         }
     </script>
 </head>

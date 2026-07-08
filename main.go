@@ -1456,7 +1456,7 @@ func TestMode() {
 	for i, book := range BookSet {
 		text := string(books[book].Text)
 		words := strings.Fields(text)
-		suffix := strings.Fields(samples[*FlagTest][:1024])
+		suffix := strings.Fields(samples[*FlagTest] /*[:1024]*/)
 		cp := make([]string, len(words))
 		copy(cp, words)
 		list[i] = make([]string, 0, 8)
