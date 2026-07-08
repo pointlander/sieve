@@ -18,7 +18,7 @@ import (
 	"syscall/js"
 )
 
-//go:embed 10.txt.utf-8.bz2
+//go:embed  books/*
 var Books embed.FS
 
 const (
@@ -189,6 +189,21 @@ func LoadBooks() []Book {
 			Name:  "10.txt.utf-8.bz2",
 			Index: 0,
 		},
+		{
+			Real:  false,
+			Name:  "gemma4.txt.bz2",
+			Index: 18,
+		},
+		{
+			Real:  false,
+			Name:  "gpt-oss.txt.bz2",
+			Index: 19,
+		},
+		{
+			Real:  false,
+			Name:  "llama3.1.txt.bz2",
+			Index: 20,
+		},
 	}
 	load := func(book string) []byte {
 		file, err := Books.Open(book)
@@ -204,7 +219,7 @@ func LoadBooks() []Book {
 		return data
 	}
 	for i := range books {
-		books[i].Text = load(fmt.Sprintf("%s", books[i].Name))
+		books[i].Text = load(fmt.Sprintf("books/%s", books[i].Name))
 	}
 	return books
 }
@@ -323,6 +338,71 @@ func TestMode(sample string) (float64, float64, float64) {
 	}
 }
 
+// Class is a model for a class
+type Class struct {
+	Graph
+	Total float64
+	List  []string
+}
+
+// Classes is a set of classes
+type Classes []Class
+
+// Score is the score function
+func (c Classes) Score(a int, data []string) float64 {
+	sum := 0.0
+	for i := range c {
+		sum += c[i].Total
+	}
+	p := math.Log(float64(c[a].Total+1) / (sum + float64(len(c))))
+	length := float64(len(data))
+	for _, symbol := range data {
+		p += math.Log(float64(c[a].Ranks[symbol]+1) / (float64(c[a].Total) + float64(len(c[a].Ranks))))
+
+	}
+	return p / length
+}
+
+// TestMode2 test
+func TestMode2(sample string) bool {
+	books := LoadBooks()
+	rng := rand.New(rand.NewSource(1))
+	classes := make(Classes, len(books))
+	for i, book := range books {
+		text := string(book.Text)
+		words := strings.Fields(text)
+		{
+			suffix := strings.Fields(sample)
+			cp := make([]string, len(words))
+			copy(cp, words)
+			has, list := make(map[string]bool), make([]string, 0, 8)
+			for _, word := range suffix {
+				if !has[word] {
+					has[word] = true
+					list = append(list, word)
+				}
+			}
+			words := append(cp, suffix...)
+			g := NewGraph()
+			count := g.LearnFast(1e-5, 8*1024*1024, rng, words, list, len(list))
+			classes[i].Graph = g
+			classes[i].Total = count
+			classes[i].List = list
+		}
+	}
+
+	max, index := -math.MaxFloat64, 0
+	for i := range classes {
+		score := classes.Score(i, classes[i].List)
+		fmt.Println("score=", score)
+		if score > max {
+			max, index = score, i
+		}
+	}
+
+	return index == 0
+}
+
 func processText(this js.Value, args []js.Value) any {
 	if len(args) > 0 {
 		index := args[0].Int()
@@ -361,7 +441,18 @@ func processText(this js.Value, args []js.Value) any {
 	return ""
 }
 
+func processText2(this js.Value, args []js.Value) any {
+	if len(args) > 0 {
+		input := args[0].String()
+		not := TestMode2(input)
+		if not {
+			return "not"
+		}
+	}
+	return "slop"
+}
+
 func main() {
-	js.Global().Set("goProcessText", js.FuncOf(processText))
+	js.Global().Set("goProcessText", js.FuncOf(processText2))
 	select {}
 }
