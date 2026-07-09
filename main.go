@@ -852,8 +852,8 @@ func (g *Graph) Learn(iterations int, rng *rand.Rand, words []string) {
 	}
 }
 
-// LearnFast adds context to a model
-func (g *Graph) LearnFast(delta float64, iterations int, rng *rand.Rand, words, list []string, size int) float64 {
+// adds context to a model
+func (g *Graph) LearnFast(delta float64, iterations int, rng *rand.Rand, words, list []string) float64 {
 	for i, word := range words[:len(words)-1] {
 		{
 			node := g.Graph[word]
@@ -904,14 +904,14 @@ func (g *Graph) LearnFast(delta float64, iterations int, rng *rand.Rand, words, 
 			for _, word := range list {
 				current += float64(g.Ranks[word]) / count
 			}
-			current /= float64(size)
+			current /= float64(len(list))
 			if math.Abs(current-previous) < delta {
 				return count
 			}
 			previous = current
 		}
 	}
-	return -1
+	return float64(iterations)
 }
 
 // Add adds context to a model
@@ -1207,27 +1207,26 @@ func VerseMode(text string) {
 		Value uint64
 	}
 	set := make([]Trace, 0, 8)
-	g.Add(8*1024*1024, rng, words)
 	for range 1024 {
 		word := words[0]
 		node := g.Graph[word]
 		trace := Trace{}
 		for range 33 {
 			trace.Trace = trace.Trace + word + " "
-			trace.Value += g.Diff[word]
+			trace.Value += g.Ranks[word]
 			sum := uint64(0)
 			for _, w := range node.Keys {
-				sum += g.Diff[w]
+				sum += g.Ranks[w]
 			}
 			for sum == 0 {
 				node = g.Graph[words[rng.Intn(len(words))]]
 				for _, w := range node.Keys {
-					sum += g.Diff[w]
+					sum += g.Ranks[w]
 				}
 			}
 			total, selected := uint64(0), uint64(rng.Intn(int(sum)))
 			for _, w := range node.Keys {
-				total += g.Diff[w]
+				total += g.Ranks[w]
 				if selected < total {
 					word = w
 					node = g.Graph[word]
@@ -1250,7 +1249,7 @@ func PreMode(text string) {
 	rng := rand.New(rand.NewSource(1))
 	words := strings.Fields(text)
 	g := NewGraph()
-	g.Learn(8*1024*1024, rng, words)
+	g.LearnFast(1e-6, 8*1024*1024, rng, words, g.Keys)
 	output, err := os.Create("pre.gob")
 	if err != nil {
 		panic(err)
@@ -1296,7 +1295,7 @@ func CalMode() {
 			{
 				words := append(cp, suffix...)
 				g := NewGraph()
-				count := g.LearnFast(1e-6, 8*1024*1024, rng, words, list, len(list))
+				count := g.LearnFast(1e-6, 8*1024*1024, rng, words, list)
 				sum := 0.0
 				for _, value := range list {
 					sum += float64(g.Ranks[value]) / float64(count)
@@ -1497,7 +1496,7 @@ func TestMode() {
 		{
 			words := append(cp, suffix...)
 			g[i] = NewGraph()
-			count[i] = g[i].LearnFast(1e-5, 8*1024*1024, rng, words, list[i], len(list[i]))
+			count[i] = g[i].LearnFast(1e-5, 8*1024*1024, rng, words, list[i])
 		}
 		sum := 0.0
 		for _, value := range list[i] {
