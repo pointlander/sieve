@@ -760,6 +760,19 @@ type Node struct {
 	Keys  []string
 }
 
+// Copy copies a node
+func (n *Node) Copy() Node {
+	cp := Node{
+		Links: make(map[string]uint64),
+		Keys:  make([]string, len(n.Keys)),
+	}
+	copy(cp.Keys, n.Keys)
+	for key, value := range n.Links {
+		cp.Links[key] = value
+	}
+	return cp
+}
+
 // Graph is a graph
 type Graph struct {
 	Keys  []string
@@ -774,6 +787,20 @@ func NewGraph() Graph {
 		Graph: make(map[string]Node),
 		Ranks: make(map[string]uint64),
 	}
+}
+
+// Copy produces a copy of a graph
+func (g *Graph) Copy() Graph {
+	cp := Graph{
+		Keys:  make([]string, len(g.Keys)),
+		Graph: make(map[string]Node),
+		Ranks: make(map[string]uint64),
+	}
+	copy(cp.Keys, g.Keys)
+	for key, value := range g.Graph {
+		cp.Graph[key] = value.Copy()
+	}
+	return cp
 }
 
 // Learn learns a model
