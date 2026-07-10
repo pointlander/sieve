@@ -915,7 +915,7 @@ func (g *Graph) LearnFast(delta float64, iterations int, rng *rand.Rand, words, 
 }
 
 // LearnFastList adds context to a model
-func (g *Graph) LearnFastList(delta float64, iterations int, rng *rand.Rand, words, list []string) float64 {
+func (g *Graph) LearnFastList(delta float64, iterations int, rng *rand.Rand, words, list []string, mark map[string]int) float64 {
 	for i, word := range list[:len(list)-1] {
 		{
 			node := g.Graph[word]
@@ -926,54 +926,77 @@ func (g *Graph) LearnFastList(delta float64, iterations int, rng *rand.Rand, wor
 			}
 			count, ok := node.Links[list[i+1]]
 			if !ok {
-				node.Keys = append(node.Keys, words[i+1])
+				node.Keys = append(node.Keys, list[i+1])
 			}
 			count++
-			node.Links[words[i+1]] = count
+			node.Links[list[i+1]] = count
 			g.Graph[word] = node
 		}
 	}
-	word := words[0]
-	node := g.Graph[word]
-	previous := math.MaxFloat64
-	for i := range iterations {
-		g.Ranks[word]++
-		if rng.Float64() > .9 {
-			index := rng.Intn(len(words))
-			word = words[index]
-			node = g.Graph[word]
+	count := 0
+	marks := make([]string, 0, len(mark))
+	for key := range mark {
+		marks = append(marks, key)
+	}
+	sort.Slice(marks, func(i, j int) bool {
+		return marks[i] < marks[j]
+	})
+	for range 128 {
+		sum := 0
+		for _, key := range marks {
+			sum += mark[key]
 		}
-		for len(node.Keys) == 0 {
-			index := rng.Intn(len(words))
-			word = words[index]
-			node = g.Graph[word]
-		}
-		sum := uint64(0)
-		for _, value := range node.Keys {
-			sum += node.Links[value]
-		}
-		total, selected := uint64(0), uint64(rng.Intn(int(sum)))
-		for _, value := range node.Keys {
-			total += node.Links[value]
+		total, selected, word := 0, rng.Intn(sum), ""
+		for _, key := range marks {
+			value := mark[key]
+			total += value
 			if selected < total {
-				word = value
-				node = g.Graph[word]
+				word = key
 				break
 			}
 		}
-		if (i+1)%len(g.Graph) == 0 {
-			current, count := 0.0, float64(i)
-			for _, word := range list {
-				current += float64(g.Ranks[word]) / count
+		node := g.Graph[word]
+		previous := math.MaxFloat64
+		for i := range 128 {
+			g.Ranks[word]++
+			if rng.Float64() > .9 {
+				index := rng.Intn(len(words))
+				word = words[index]
+				node = g.Graph[word]
 			}
-			current /= float64(len(list))
-			if math.Abs(current-previous) < delta {
-				return count
+			for len(node.Keys) == 0 {
+				index := rng.Intn(len(words))
+				word = words[index]
+				node = g.Graph[word]
 			}
-			previous = current
+			sum := uint64(0)
+			for _, value := range node.Keys {
+				sum += node.Links[value]
+			}
+			total, selected := uint64(0), uint64(rng.Intn(int(sum)))
+			for _, value := range node.Keys {
+				total += node.Links[value]
+				if selected < total {
+					word = value
+					node = g.Graph[word]
+					break
+				}
+			}
+			if (i+1)%len(g.Graph) == 0 {
+				current := 0.0
+				for _, word := range list {
+					current += float64(g.Ranks[word]) / float64(count)
+				}
+				current /= float64(len(list))
+				if math.Abs(current-previous) < delta {
+					return float64(count)
+				}
+				previous = current
+			}
+			count++
 		}
 	}
-	return float64(iterations)
+	return float64(count)
 }
 
 // Add adds context to a model
@@ -1325,7 +1348,9 @@ func VerseMode(text string) {
 			}
 		}
 	}
-	search(0, words[0])
+	for _, word := range words {
+		search(0, word)
+	}
 	fmt.Println(mark)
 	for i, trace := range set {
 		cp := make([]string, len(words))
@@ -1338,7 +1363,7 @@ func VerseMode(text string) {
 			}
 		}
 		gcp := g.Copy()
-		count := gcp.LearnFastList(1e-6, 8*1024*1024, rng, cp, list)
+		count := gcp.LearnFastList(1e-6, 8*1024*1024, rng, cp, list, mark)
 		for _, word := range words {
 			set[i].Cost += float64(gcp.Ranks[word]) / float64(count)
 		}
