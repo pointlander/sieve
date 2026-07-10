@@ -941,6 +941,7 @@ func (g *Graph) LearnFastList(delta float64, iterations int, rng *rand.Rand, wor
 	sort.Slice(marks, func(i, j int) bool {
 		return marks[i] < marks[j]
 	})
+	previous := math.MaxFloat64
 	for range 128 {
 		sum := 0
 		for _, key := range marks {
@@ -956,8 +957,7 @@ func (g *Graph) LearnFastList(delta float64, iterations int, rng *rand.Rand, wor
 			}
 		}
 		node := g.Graph[word]
-		previous := math.MaxFloat64
-		for i := range 128 {
+		for range 128 {
 			g.Ranks[word]++
 			if rng.Float64() > .9 {
 				index := rng.Intn(len(words))
@@ -982,7 +982,7 @@ func (g *Graph) LearnFastList(delta float64, iterations int, rng *rand.Rand, wor
 					break
 				}
 			}
-			if (i+1)%len(g.Graph) == 0 {
+			if (count+1)%len(mark) == 0 {
 				current := 0.0
 				for _, word := range list {
 					current += float64(g.Ranks[word]) / float64(count)
