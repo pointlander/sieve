@@ -1306,6 +1306,25 @@ func VerseMode(text string) {
 		}
 		set = append(set, trace)
 	}
+	mark := make(map[string]int)
+	var search func(depth int, word string)
+	search = func(depth int, word string) {
+		if depth > 4 {
+			return
+		}
+		node := g.Graph[word]
+		for key := range node.Links {
+			if value, found := mark[key]; !found {
+				mark[key] = depth
+				search(depth+1, key)
+			} else if value > depth {
+				mark[key] = depth
+				search(depth+1, key)
+			}
+		}
+	}
+	search(0, words[0])
+	fmt.Println(mark)
 	for i, trace := range set {
 		cp := make([]string, len(words))
 		copy(cp, words)
