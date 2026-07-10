@@ -1309,7 +1309,7 @@ func VerseMode(text string) {
 	mark := make(map[string]int)
 	var search func(depth int, word string)
 	search = func(depth int, word string) {
-		if depth > 4 {
+		if depth > 2 {
 			return
 		}
 		node := g.Graph[word]
@@ -1319,6 +1319,8 @@ func VerseMode(text string) {
 				search(depth+1, key)
 			} else if value > depth {
 				mark[key] = depth
+				search(depth+1, key)
+			} else {
 				search(depth+1, key)
 			}
 		}
