@@ -1294,7 +1294,7 @@ func VerseMode(text string) {
 		Cost  float64
 	}
 	set := make([]Trace, 0, 8)
-	for range 8 {
+	for range 16 {
 		word := words[len(words)-1]
 		node := g.Graph[word]
 		trace := Trace{}
