@@ -1273,9 +1273,8 @@ func GraphMode(books []Book, t int, alt string) GraphResults {
 }
 
 // VerseMode generate text
-func VerseMode(text string) {
+func VerseMode(words []string) []string {
 	rng := rand.New(rand.NewSource(1))
-	words := strings.Fields(text)
 	g := NewGraph()
 	input, err := os.Open("pre.gob")
 	if err != nil {
@@ -1375,6 +1374,7 @@ func VerseMode(text string) {
 	for _, trace := range set {
 		fmt.Println(trace.Cost, trace.Trace)
 	}
+	return set[len(set)-1].Words[:len(words)+3]
 }
 
 // PreMode pre-generate model
@@ -1764,7 +1764,10 @@ var samples = []string{
 	}
 
 	if *FlagVerse != "" {
-		VerseMode(*FlagVerse)
+		words := strings.Fields(*FlagVerse)
+		for range 7 {
+			words = VerseMode(words)
+		}
 		return
 	}
 
