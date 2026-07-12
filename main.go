@@ -1292,42 +1292,6 @@ func VerseMode(words []string) []string {
 		Value uint64
 		Cost  float64
 	}
-	set := make([]Trace, 0, 8)
-	for range 16 {
-		word := words[len(words)-1]
-		node := g.Graph[word]
-		trace := Trace{}
-		for _, word := range words[:len(words)-1] {
-			trace.Trace = trace.Trace + word + " "
-			trace.Words = append(trace.Words, word)
-			trace.Value += g.Ranks[word]
-		}
-		for range 33 {
-			trace.Trace = trace.Trace + word + " "
-			trace.Words = append(trace.Words, word)
-			trace.Value += g.Ranks[word]
-			sum := uint64(0)
-			for _, w := range node.Keys {
-				sum += g.Ranks[w]
-			}
-			for sum == 0 {
-				node = g.Graph[words[rng.Intn(len(words))]]
-				for _, w := range node.Keys {
-					sum += g.Ranks[w]
-				}
-			}
-			total, selected := uint64(0), uint64(rng.Intn(int(sum)))
-			for _, w := range node.Keys {
-				total += g.Ranks[w]
-				if selected < total {
-					word = w
-					node = g.Graph[word]
-					break
-				}
-			}
-		}
-		set = append(set, trace)
-	}
 	mark := make(map[string]int)
 	var search func(depth int, word string)
 	search = func(depth int, word string) {
@@ -1351,23 +1315,56 @@ func VerseMode(words []string) []string {
 		search(0, word)
 	}
 	fmt.Println(mark)
-	for i, trace := range set {
-		cp := make([]string, len(words))
-		copy(cp, words)
-		cp = append(cp, trace.Words...)
-		has, list := make(map[string]bool), make([]string, 0, 8)
-		for _, word := range trace.Words {
-			if !has[word] {
-				list = append(list, word)
-			}
-		}
-		gcp := g.Copy()
-		count := gcp.LearnFastList(1e-6, 8*1024*1024, rng, cp, list, mark)
-		for _, word := range words {
-			set[i].Cost += float64(gcp.Ranks[word]) / float64(count)
+	cp := make([]string, len(words))
+	copy(cp, words)
+	cp = append(cp, words...)
+	has, list := make(map[string]bool), make([]string, 0, 8)
+	for _, word := range cp {
+		if !has[word] {
+			list = append(list, word)
 		}
 	}
-
+	gcp := g.Copy()
+	count := gcp.LearnFastList(1e-6, 8*1024*1024, rng, cp, list, mark)
+	set := make([]Trace, 0, 8)
+	for range 256 {
+		word := words[len(words)-1]
+		node := gcp.Graph[word]
+		trace := Trace{}
+		for _, word := range words[:len(words)-1] {
+			trace.Trace = trace.Trace + word + " "
+			trace.Words = append(trace.Words, word)
+			trace.Value += gcp.Ranks[word]
+		}
+		for range 33 {
+			trace.Trace = trace.Trace + word + " "
+			trace.Words = append(trace.Words, word)
+			trace.Value += gcp.Ranks[word]
+			sum := uint64(0)
+			for _, w := range node.Keys {
+				sum += gcp.Ranks[w]
+			}
+			for sum == 0 {
+				node = gcp.Graph[words[rng.Intn(len(words))]]
+				for _, w := range node.Keys {
+					sum += gcp.Ranks[w]
+				}
+			}
+			total, selected := uint64(0), uint64(rng.Intn(int(sum)))
+			for _, w := range node.Keys {
+				total += gcp.Ranks[w]
+				if selected < total {
+					word = w
+					node = gcp.Graph[word]
+					break
+				}
+			}
+		}
+		for _, word := range trace.Words {
+			trace.Cost += float64(gcp.Ranks[word]) / float64(count)
+		}
+		set = append(set, trace)
+	}
 	sort.Slice(set, func(i, j int) bool {
 		return set[i].Cost < set[j].Cost
 	})
