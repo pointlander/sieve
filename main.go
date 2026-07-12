@@ -943,19 +943,7 @@ func (g *Graph) LearnFastList(delta float64, iterations int, rng *rand.Rand, wor
 	})
 	previous := math.MaxFloat64
 	for range 128 {
-		sum := 0
-		for _, key := range marks {
-			sum += mark[key]
-		}
-		total, selected, word := 0, rng.Intn(sum), ""
-		for _, key := range marks {
-			value := mark[key]
-			total += value
-			if selected < total {
-				word = key
-				break
-			}
-		}
+		word := marks[rng.Intn(len(marks))]
 		node := g.Graph[word]
 		for range 128 {
 			g.Ranks[word]++
