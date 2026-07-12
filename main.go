@@ -778,7 +778,6 @@ type Graph struct {
 	Keys  []string
 	Graph map[string]Node
 	Ranks map[string]uint64
-	Diff  map[string]uint64
 }
 
 // NewGraph makes a new graph
@@ -985,83 +984,6 @@ func (g *Graph) LearnFastList(delta float64, iterations int, rng *rand.Rand, wor
 		}
 	}
 	return float64(count)
-}
-
-// Add adds context to a model
-func (g *Graph) Add(iterations int, rng *rand.Rand, words []string) {
-	sum, count := uint64(0), uint64(0)
-	for _, key := range g.Keys {
-		node := g.Graph[key]
-		for _, key := range node.Keys {
-			sum += node.Links[key]
-			count++
-		}
-	}
-	avg := float64(sum) / float64(count)
-	stddev := 0.0
-	for _, key := range g.Keys {
-		node := g.Graph[key]
-		for _, key := range node.Keys {
-			diff := float64(node.Links[key]) - avg
-			stddev += diff * diff
-		}
-	}
-	stddev = math.Sqrt(stddev / float64(count))
-	for i, word := range words[:len(words)-1] {
-		{
-			node := g.Graph[word]
-			if node.Links == nil {
-				g.Keys = append(g.Keys, word)
-				node.Links = make(map[string]uint64)
-				node.Keys = make([]string, 0, 8)
-			}
-			count, ok := node.Links[words[i+1]]
-			if !ok {
-				node.Keys = append(node.Keys, words[i+1])
-			}
-			count += uint64(3 * stddev)
-			node.Links[words[i+1]] = count
-			g.Graph[word] = node
-		}
-	}
-	if g.Diff == nil {
-		g.Diff = make(map[string]uint64)
-	}
-	word := words[0]
-	node := g.Graph[word]
-	for range iterations {
-		g.Diff[word]++
-		if rng.Float64() > .9 {
-			index := rng.Intn(len(words))
-			word = words[index]
-			node = g.Graph[word]
-		}
-		for len(node.Keys) == 0 {
-			index := rng.Intn(len(words))
-			word = words[index]
-			node = g.Graph[word]
-		}
-		sum := uint64(0)
-		for _, value := range node.Keys {
-			sum += node.Links[value]
-		}
-		total, selected := uint64(0), uint64(rng.Intn(int(sum)))
-		for _, value := range node.Keys {
-			total += node.Links[value]
-			if selected < total {
-				word = value
-				node = g.Graph[word]
-				break
-			}
-		}
-	}
-	for key, value := range g.Diff {
-		diff := int(value) - int(g.Ranks[key])
-		if diff < 0 {
-			diff = -diff
-		}
-		g.Diff[key] = uint64(diff)
-	}
 }
 
 // Result is a result
@@ -1352,11 +1274,16 @@ func VerseMode(g Graph, words []string) []string {
 }
 
 // PreMode pre-generate model
-func PreMode(text string) {
+func PreMode() {
 	rng := rand.New(rand.NewSource(1))
-	words := strings.Fields(text)
 	g := NewGraph()
-	g.LearnFast(1e-6, 8*1024*1024, rng, words, g.Keys)
+	books := LoadBooks()
+	for i := range books[:18] {
+		fmt.Println(books[i].Name)
+		words := strings.Fields(string(books[i].Text))
+		g.LearnFast(1e-6, 8*1024*1024, rng, words, g.Keys)
+		fmt.Println("done")
+	}
 	output, err := os.Create("pre.gob")
 	if err != nil {
 		panic(err)
@@ -1757,8 +1684,7 @@ var samples = []string{
 	}
 
 	if *FlagPre {
-		books := LoadBooks()
-		PreMode(string(books[0].Text))
+		PreMode()
 		return
 	}
 
