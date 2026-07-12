@@ -942,7 +942,7 @@ func (g *Graph) LearnFastList(delta float64, iterations int, rng *rand.Rand, wor
 		return marks[i] < marks[j]
 	})
 	previous := math.MaxFloat64
-	for range 128 {
+	for range 256 {
 		word := marks[rng.Intn(len(marks))]
 		node := g.Graph[word]
 		for range 128 {
@@ -1261,19 +1261,8 @@ func GraphMode(books []Book, t int, alt string) GraphResults {
 }
 
 // VerseMode generate text
-func VerseMode(words []string) []string {
+func VerseMode(g Graph, words []string) []string {
 	rng := rand.New(rand.NewSource(1))
-	g := NewGraph()
-	input, err := os.Open("pre.gob")
-	if err != nil {
-		panic(err)
-	}
-	defer input.Close()
-	decoder := gob.NewDecoder(input)
-	err = decoder.Decode(&g)
-	if err != nil {
-		panic(err)
-	}
 	type Trace struct {
 		Trace string
 		Words []string
@@ -1315,7 +1304,7 @@ func VerseMode(words []string) []string {
 	gcp := g.Copy()
 	count := gcp.LearnFastList(1e-6, 8*1024*1024, rng, cp, list, mark)
 	set := make([]Trace, 0, 8)
-	for range 256 {
+	for range 512 {
 		word := words[len(words)-1]
 		node := gcp.Graph[word]
 		trace := Trace{}
@@ -1749,9 +1738,20 @@ var samples = []string{
 	}
 
 	if *FlagVerse != "" {
+		g := NewGraph()
+		input, err := os.Open("pre.gob")
+		if err != nil {
+			panic(err)
+		}
+		defer input.Close()
+		decoder := gob.NewDecoder(input)
+		err = decoder.Decode(&g)
+		if err != nil {
+			panic(err)
+		}
 		words := strings.Fields(*FlagVerse)
 		for range 7 {
-			words = VerseMode(words)
+			words = VerseMode(g, words)
 		}
 		return
 	}
