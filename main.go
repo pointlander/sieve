@@ -914,7 +914,7 @@ func (g *Graph) LearnFast(delta float64, iterations int, rng *rand.Rand, words, 
 }
 
 // LearnFastList adds context to a model
-func (g *Graph) LearnFastList(delta float64, iterations int, rng *rand.Rand, words, list []string, mark map[string]int) float64 {
+func (g *Graph) LearnFastList(delta float64, iterations int, rng *rand.Rand, words, list []string) float64 {
 	for i, word := range list[:len(list)-1] {
 		{
 			node := g.Graph[word]
@@ -933,16 +933,9 @@ func (g *Graph) LearnFastList(delta float64, iterations int, rng *rand.Rand, wor
 		}
 	}
 	count := 0
-	marks := make([]string, 0, len(mark))
-	for key := range mark {
-		marks = append(marks, key)
-	}
-	sort.Slice(marks, func(i, j int) bool {
-		return marks[i] < marks[j]
-	})
 	previous := math.MaxFloat64
-	for range 256 {
-		word := marks[rng.Intn(len(marks))]
+	for range 1024 {
+		word := list[rng.Intn(len(list))]
 		node := g.Graph[word]
 		for range 128 {
 			g.Ranks[word]++
@@ -969,7 +962,7 @@ func (g *Graph) LearnFastList(delta float64, iterations int, rng *rand.Rand, wor
 					break
 				}
 			}
-			if (count+1)%len(mark) == 0 {
+			if (count+1)%1024 == 0 {
 				current := 0.0
 				for _, word := range list {
 					current += float64(g.Ranks[word]) / float64(count)
@@ -1191,29 +1184,6 @@ func VerseMode(g Graph, words []string) []string {
 		Value uint64
 		Cost  float64
 	}
-	mark := make(map[string]int)
-	var search func(depth int, word string)
-	search = func(depth int, word string) {
-		if depth > 2 {
-			return
-		}
-		node := g.Graph[word]
-		for key := range node.Links {
-			if value, found := mark[key]; !found {
-				mark[key] = depth
-				search(depth+1, key)
-			} else if value > depth {
-				mark[key] = depth
-				search(depth+1, key)
-			} else {
-				search(depth+1, key)
-			}
-		}
-	}
-	for _, word := range words {
-		search(0, word)
-	}
-	fmt.Println(mark)
 	cp := make([]string, len(words))
 	copy(cp, words)
 	cp = append(cp, words...)
@@ -1224,7 +1194,7 @@ func VerseMode(g Graph, words []string) []string {
 		}
 	}
 	gcp := g.Copy()
-	count := gcp.LearnFastList(1e-6, 8*1024*1024, rng, cp, list, mark)
+	count := gcp.LearnFastList(1e-6, 8*1024*1024, rng, cp, list)
 	set := make([]Trace, 0, 8)
 	for range 512 {
 		word := words[len(words)-1]
